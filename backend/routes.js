@@ -46,7 +46,7 @@ router.get('/categories', materialRead, materials.categories);
 router.get('/locations', materialRead, materials.locations);
 router.post('/locations', requirePermission('STOCK_MOVE'), materials.createLocation);
 router.get('/services', materialRead, services.list);
-router.post('/services', requirePermission('USERS_MANAGE'), services.create);
+router.post('/services', requirePermission('ALLOCATIONS_MANAGE'), services.create);
 
 router.get('/movements', materialRead, inventory.listMovements);
 router.post('/movements', requirePermission('STOCK_MOVE'), inventory.createMovement);

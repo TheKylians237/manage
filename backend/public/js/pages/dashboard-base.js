@@ -3,7 +3,7 @@ window.MatDashboard = (() => {
   const roleLabel={ADMIN:'Administrateur',STOREKEEPER:'Magasinier',MAINTAINER:'Maintenancier'};
   const links={
     ADMIN:[['Tableau de bord','dashboard-admin.html','◫'],['Matériels','materials.html','▦'],['Mouvements','movements.html','⇄'],['Dotations','allocations.html','↗'],['Maintenance','maintenance.html','⌁'],['Commandes','orders.html','▤'],['Fournisseurs','suppliers.html','♧'],['Utilisateurs et paramètres','users.html','♙'],['Rapports','reports.html','▥']],
-    STOREKEEPER:[['Tableau de bord','dashboard-storekeeper.html','◫'],['Matériels','materials.html','▦'],['Mouvements','movements.html','⇄'],['Dotations','allocations.html','↗']],
+    STOREKEEPER:[['Tableau de bord','dashboard-storekeeper.html','◫'],['Gestion de stock','materials.html','▦'],['Mouvements','movements.html','⇄'],['Dotations','allocations.html','↗']],
     MAINTAINER:[['Tableau de bord','dashboard-maintainer.html','◫'],['Matériels','materials.html','▦'],['Mouvements','movements.html','⇄'],['Maintenance','maintenance.html','⌁']]
   };
   let data=null, allMaterials=[];
