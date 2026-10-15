@@ -26,7 +26,7 @@ async function dashboard(req, res, next) {
                        COALESCE(SUM(CASE WHEN movement_type='TRANSFER' THEN 1 ELSE 0 END),0) AS transfers
                   FROM stock_movements WHERE movement_date >= ? AND movement_date < DATE_ADD(?, INTERVAL 1 DAY)`, params),
       db.query(`SELECT c.category_name, COALESCE(SUM(sb.quantity),0) AS units
-                  FROM categories c LEFT JOIN materials m ON m.category_id=c.category_id AND m.is_active=TRUE
+                  FROM categories c LEFT JOIN materials m ON m.category_id=c.category_id AND m.is_active=TRUE AND m.merged_into_material_id IS NULL
                   LEFT JOIN stock_balances sb ON sb.material_id=m.material_id
                  WHERE c.is_active=TRUE GROUP BY c.category_id,c.category_name ORDER BY units DESC LIMIT 8`),
       db.query(`SELECT sm.stock_movement_id, sm.movement_number, sm.movement_type, sm.movement_date,
@@ -42,7 +42,7 @@ async function dashboard(req, res, next) {
                        CASE WHEN COALESCE(SUM(sb.quantity),0)<=m.minimum_stock THEN 1 ELSE 0 END AS below_minimum
                   FROM materials m JOIN categories c ON c.category_id=m.category_id
                   LEFT JOIN stock_balances sb ON sb.material_id=m.material_id
-                 WHERE m.is_active=TRUE GROUP BY m.material_id,m.material_code,m.designation,c.category_name,m.brand,m.minimum_stock,m.operational_status
+                 WHERE m.is_active=TRUE AND m.merged_into_material_id IS NULL GROUP BY m.material_id,m.material_code,m.designation,c.category_name,m.brand,m.minimum_stock,m.operational_status
                  ORDER BY below_minimum DESC,m.designation LIMIT 30`),
       db.query(`SELECT COUNT(*) AS count, SUM(status IN ('PLANNED','IN_PROGRESS')) AS open_count,
                        SUM(status='COMPLETED') AS completed_count FROM maintenance_sessions

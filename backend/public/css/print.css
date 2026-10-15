@@ -1,0 +1,18 @@
+.print-section-button{margin-left:auto;white-space:nowrap}
+.card-head .print-section-button{margin-left:8px}
+#print-root{display:none}
+@media print{
+  @page{size:auto;margin:14mm}
+  body.printing-section>*:not(#print-root){display:none!important}
+  body.printing-section>#print-root{display:block!important;position:static!important;width:100%;color:#111;background:#fff;font:11pt/1.45 Arial,sans-serif}
+  #print-root h1{font-size:18pt;margin:0 0 4mm}
+  #print-root .print-context{font-size:9pt;color:#555;border-bottom:1px solid #aaa;padding-bottom:3mm;margin:0 0 6mm}
+  #print-root table{width:100%;border-collapse:collapse;table-layout:auto}
+  #print-root thead{display:table-header-group}
+  #print-root tr{break-inside:avoid}
+  #print-root th,#print-root td{border:1px solid #888;padding:5px 7px;text-align:left;white-space:normal}
+  #print-root th{background:#eee!important;color:#111;font-weight:700;print-color-adjust:exact}
+  #print-root .table-scroll{overflow:visible}
+  #print-root .status{border:1px solid #aaa;background:transparent!important;color:#111!important}
+  #print-root .summary-text{font-size:11pt;color:#111;line-height:1.6}
+}

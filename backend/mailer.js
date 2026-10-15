@@ -44,8 +44,20 @@ async function sendPasswordReset(user, resetUrl) {
   });
 }
 
+async function sendMaintenanceReminder(maintenance, technician) {
+  if (!technician.email) throw new TypeError('Le maintenancier affecté ne possède pas d’adresse e-mail.');
+  const scheduledAt = new Date(maintenance.scheduled_at);
+  const formattedDate = new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'full', timeStyle: 'short', timeZone: process.env.APP_TIMEZONE || 'Africa/Douala'
+  }).format(scheduledAt);
+  const subject = `Rappel de maintenance dans 5 minutes · ${maintenance.maintenance_number}`;
+  const text = `Bonjour ${technician.full_name},\n\nL’intervention ${maintenance.maintenance_number} commence dans environ 5 minutes.\nMatériel : ${maintenance.material_code} · ${maintenance.designation}\nHeure prévue : ${formattedDate}\n\nConnectez-vous à Mat-Manage pour consulter l’intervention.`;
+  const html = `<p>Bonjour ${escapeHtml(technician.full_name)},</p><p>L’intervention <b>${escapeHtml(maintenance.maintenance_number)}</b> commence dans environ 5 minutes.</p><p><b>Matériel :</b> ${escapeHtml(maintenance.material_code)} · ${escapeHtml(maintenance.designation)}<br><b>Heure prévue :</b> ${escapeHtml(formattedDate)}</p><p>Connectez-vous à Mat-Manage pour consulter l’intervention.</p>`;
+  return sendMail({ to: technician.email, subject, text, html });
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-module.exports = { sendMail, sendSecurityNotice, sendPasswordReset };
+module.exports = { sendMail, sendSecurityNotice, sendPasswordReset, sendMaintenanceReminder };

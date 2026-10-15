@@ -4,6 +4,19 @@ const db = require('../db');
 const TYPES = new Set(['PREVENTIVE','REPAIR','DIAGNOSTIC','INSTALLATION','OTHER']);
 const STATUSES = new Set(['PLANNED','IN_PROGRESS','COMPLETED','CANCELLED']);
 
+async function technicians(req, res, next) {
+  try {
+    const rows = await db.query(
+      `SELECT u.user_id, u.matricule, u.full_name
+         FROM users u JOIN roles r ON r.role_id = u.role_id
+        WHERE r.role_code = 'MAINTAINER' AND u.is_active = TRUE
+          AND u.email IS NOT NULL AND u.email <> ''
+        ORDER BY u.full_name`
+    );
+    res.json({ technicians: rows });
+  } catch (error) { next(error); }
+}
+
 async function list(req, res, next) {
   try {
     const conditions = [], params = [];
@@ -12,7 +25,7 @@ async function list(req, res, next) {
     if (req.query.to && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)) { conditions.push('ms.scheduled_at < DATE_ADD(?, INTERVAL 1 DAY)'); params.push(req.query.to); }
     const q=String(req.query.q||'').trim().slice(0,100);if(q){conditions.push('(ms.maintenance_number LIKE ? OR m.designation LIKE ? OR tech.full_name LIKE ?)');params.push(...Array(3).fill(`%${q}%`))}
     const rows = await db.query(
-      `SELECT ms.maintenance_id,ms.maintenance_number,ms.maintenance_type,ms.status,ms.scheduled_at,
+      `SELECT ms.maintenance_id,ms.maintenance_number,ms.maintenance_type,ms.status,ms.scheduled_at,ms.started_at,ms.completed_at,
               ms.duration_minutes,ms.problem_description,ms.actions_taken,m.material_code,m.designation,
               tech.full_name AS technician, reporter.full_name AS reported_by
          FROM maintenance_sessions ms JOIN materials m ON m.material_id=ms.material_id
@@ -23,18 +36,57 @@ async function list(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function upcomingReminders(req, res, next) {
+  try {
+    const rows = await db.query(
+      `SELECT ms.maintenance_id, ms.maintenance_number, ms.scheduled_at,
+              m.designation, m.material_code
+         FROM maintenance_sessions ms
+         JOIN materials m ON m.material_id = ms.material_id
+        WHERE ms.technician_id = ? AND ms.status = 'PLANNED'
+          AND ms.scheduled_at > UTC_TIMESTAMP()
+          AND ms.scheduled_at <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)
+        ORDER BY ms.scheduled_at LIMIT 20`,
+      [req.auth.userId]
+    );
+    res.set('Cache-Control', 'no-store');
+    res.json({ reminders: rows.map(row => ({ ...row, scheduled_at: new Date(row.scheduled_at).toISOString() })) });
+  } catch (error) { next(error); }
+}
+
 async function create(req, res, next) {
   try {
-    const materialId = Number(req.body?.materialId), scheduledAt = new Date(req.body?.scheduledAt);
+    const materialId = Number(req.body?.materialId), mode = String(req.body?.mode || 'PLANNED');
+    const immediate = mode === 'IMMEDIATE';
+    const scheduledAt = immediate ? null : new Date(req.body?.scheduledAt);
     const type = String(req.body?.type || ''), duration = req.body?.durationMinutes == null ? null : Number(req.body.durationMinutes);
-    if (!Number.isSafeInteger(materialId) || Number.isNaN(scheduledAt.getTime()) || !TYPES.has(type) || (duration !== null && (!Number.isInteger(duration) || duration < 0))) return res.status(400).json({ error: 'Les informations de maintenance sont invalides.' });
-    const result = await db.query(
-      `INSERT INTO maintenance_sessions (maintenance_number,material_id,reported_by,technician_id,maintenance_type,status,scheduled_at,duration_minutes,problem_description)
-       VALUES (?, ?, ?, ?, ?, 'PLANNED', ?, ?, ?)`,
-      [`MAINT-${Date.now()}`, materialId, req.auth.userId, req.body?.technicianId || null, type, scheduledAt, duration, String(req.body?.problemDescription || '').slice(0, 5000) || null]
-    );
-    await db.query('UPDATE materials SET operational_status = \'IN_MAINTENANCE\' WHERE material_id = ?', [materialId]);
-    res.status(201).json({ ok: true, maintenanceId: result.insertId });
+    if (!['PLANNED','IMMEDIATE'].includes(mode) || !Number.isSafeInteger(materialId) || (!immediate && (Number.isNaN(scheduledAt.getTime()) || scheduledAt.getTime() <= Date.now())) || !TYPES.has(type) || (duration !== null && (!Number.isInteger(duration) || duration < 0))) return res.status(400).json({ error: 'Les informations de maintenance sont invalides. Une intervention planifiée doit avoir une date future.' });
+    const status = immediate ? 'IN_PROGRESS' : 'PLANNED';
+    const requestedTechnicianId = req.auth.roleCode === 'MAINTAINER'
+      ? Number(req.auth.userId)
+      : (req.body?.technicianId ? Number(req.body.technicianId) : null);
+    let technicianId = requestedTechnicianId;
+    if (!immediate && !technicianId) return res.status(400).json({ error: 'Choisissez un maintenancier pour recevoir le rappel par e-mail.' });
+    if (technicianId !== null) {
+      if (!Number.isSafeInteger(technicianId)) return res.status(400).json({ error: 'Maintenancier invalide.' });
+      const assigned = await db.query(
+        `SELECT u.user_id FROM users u JOIN roles r ON r.role_id = u.role_id
+          WHERE u.user_id = ? AND r.role_code = 'MAINTAINER' AND u.is_active = TRUE
+            AND u.email IS NOT NULL AND u.email <> '' LIMIT 1`,
+        [technicianId]
+      );
+      if (!assigned.length) return res.status(400).json({ error: 'Le maintenancier doit être actif et avoir une adresse e-mail valide.' });
+    }
+    const maintenanceId = await db.transaction(async tx => {
+      const result = await tx.query(
+        `INSERT INTO maintenance_sessions (maintenance_number,material_id,reported_by,technician_id,maintenance_type,status,scheduled_at,started_at,duration_minutes,problem_description)
+         VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, UTC_TIMESTAMP()), CASE WHEN ?='IN_PROGRESS' THEN UTC_TIMESTAMP() ELSE NULL END, ?, ?)`,
+        [`MAINT-${Date.now()}`, materialId, req.auth.userId, technicianId, type, status, scheduledAt, status, duration, String(req.body?.problemDescription || '').slice(0, 5000) || null]
+      );
+      await tx.query('UPDATE materials SET operational_status = \'IN_MAINTENANCE\' WHERE material_id = ?', [materialId]);
+      return result.insertId;
+    });
+    res.status(201).json({ ok: true, maintenanceId, status });
   } catch (error) { next(error); }
 }
 
@@ -106,4 +158,4 @@ async function consumePart(req, res, next) {
   }
 }
 
-module.exports = { list, create, updateStatus, listParts, consumePart };
+module.exports = { list, technicians, upcomingReminders, create, updateStatus, listParts, consumePart };

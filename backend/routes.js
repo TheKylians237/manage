@@ -38,13 +38,14 @@ router.post('/profile/avatar', upload.single('avatar'), profile.uploadAvatar);
 router.post('/profile/password', profile.changePassword);
 
 router.get('/materials', materialRead, materials.listMaterials);
+router.get('/stock-organization', materialRead, materials.stockOrganization);
 router.get('/material-summaries', materialRead, materials.summaries);
 router.get('/mercuriale', materialRead, materials.mercuriale);
+router.get('/materials/match', materialRead, materials.matchMaterial);
 router.post('/materials', requirePermission('MATERIALS_MANAGE'), materials.createMaterial);
 router.patch('/materials/:materialId/status', requirePermission('MATERIALS_MANAGE'), materials.updateMaterialStatus);
 router.get('/categories', materialRead, materials.categories);
 router.get('/locations', materialRead, materials.locations);
-router.post('/locations', requirePermission('STOCK_MOVE'), materials.createLocation);
 router.get('/services', materialRead, services.list);
 router.post('/services', requirePermission('ALLOCATIONS_MANAGE'), services.create);
 
@@ -54,6 +55,8 @@ router.get('/allocations', requirePermission('ALLOCATIONS_MANAGE'), inventory.li
 router.post('/allocations', requirePermission('ALLOCATIONS_MANAGE'), inventory.createAllocation);
 
 router.get('/maintenance', requirePermission('MAINTENANCE_MANAGE'), maintenance.list);
+router.get('/maintenance/technicians', requirePermission('USERS_MANAGE'), maintenance.technicians);
+router.get('/maintenance/upcoming-reminders', requirePermission('MAINTENANCE_MANAGE'), maintenance.upcomingReminders);
 router.post('/maintenance', requirePermission('MAINTENANCE_MANAGE'), maintenance.create);
 router.patch('/maintenance/:maintenanceId/status', requirePermission('MAINTENANCE_MANAGE'), maintenance.updateStatus);
 router.get('/maintenance/:maintenanceId/parts', requirePermission('MAINTENANCE_MANAGE'), maintenance.listParts);

@@ -11,8 +11,9 @@ async function listAllocations(req, res, next) {
     if (serviceId && Number.isSafeInteger(serviceId)) { conditions.push('a.service_id=?'); params.push(serviceId); }
     if (req.query.from && /^\d{4}-\d{2}-\d{2}$/.test(req.query.from)) { conditions.push('a.allocation_date>=?'); params.push(`${req.query.from} 00:00:00`); }
     if (req.query.to && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)) { conditions.push('a.allocation_date<DATE_ADD(?,INTERVAL 1 DAY)'); params.push(req.query.to); }
-    const q = String(req.query.q || '').trim().slice(0, 100); if (q) { conditions.push('(a.allocation_number LIKE ? OR s.service_name LIKE ? OR a.recipient_name LIKE ? OR m.designation LIKE ?)'); params.push(...Array(4).fill(`%${q}%`)); }
+    const q = String(req.query.q || '').trim().slice(0, 100); if (q) { conditions.push('(a.allocation_number LIKE ? OR s.service_name LIKE ? OR a.recipient_name LIKE ? OR a.recipient_id_number LIKE ? OR m.designation LIKE ? OR m.material_code LIKE ?)'); params.push(...Array(6).fill(`%${q}%`)); }
     const rows = await db.query(`SELECT a.allocation_id,a.allocation_number,a.allocation_date,a.recipient_name,
+        a.recipient_id_type,a.recipient_id_number,
         a.receipt_reference,s.service_name,m.designation,ml.quantity,u.full_name AS allocated_by
       FROM allocations a JOIN services s ON s.service_id=a.service_id
       JOIN allocation_lines al ON al.allocation_id=a.allocation_id
@@ -91,7 +92,9 @@ async function createAllocation(req, res, next) {
     const serviceId = Number(req.body?.serviceId), sourceLocationId = Number(req.body?.sourceLocationId);
     const lines = Array.isArray(req.body?.lines) ? req.body.lines.slice(0, 100) : [];
     const recipient = String(req.body?.recipientName || '').trim();
-    if (!Number.isSafeInteger(serviceId) || !Number.isSafeInteger(sourceLocationId) || !recipient || recipient.length > 150 || !lines.length) return res.status(400).json({ error: 'Service, emplacement, bénéficiaire et matériel requis.' });
+    const recipientIdType = String(req.body?.recipientIdType || '').trim().toUpperCase();
+    const recipientIdNumber = String(req.body?.recipientIdNumber || '').trim();
+    if (!Number.isSafeInteger(serviceId) || !Number.isSafeInteger(sourceLocationId) || !recipient || recipient.length > 150 || !['MATRICULE', 'CNI'].includes(recipientIdType) || !/^[A-Za-z0-9 ./-]{3,40}$/.test(recipientIdNumber) || !lines.length) return res.status(400).json({ error: 'Service, emplacement, bénéficiaire, matricule ou numéro de CNI et matériel requis.' });
     for (const line of lines) if (!Number.isSafeInteger(Number(line.materialId)) || !Number.isFinite(Number(line.quantity)) || Number(line.quantity) <= 0) return res.status(400).json({ error: 'Ligne de dotation invalide.' });
     const allocationNumber = `DOT-${Date.now()}`;
     const allocationId = await db.transaction(async tx => {
@@ -101,9 +104,9 @@ async function createAllocation(req, res, next) {
         [`${allocationNumber}-M`, sourceLocationId, serviceId, req.auth.userId, recipient, req.body?.receiptReference || allocationNumber, req.body?.notes || null]
       );
       const allocation = await tx.query(
-        `INSERT INTO allocations (allocation_number, stock_movement_id, service_id, recipient_name, allocated_by, receipt_reference, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [allocationNumber, mv.insertId, serviceId, recipient, req.auth.userId, req.body?.receiptReference || null, req.body?.notes || null]
+        `INSERT INTO allocations (allocation_number, stock_movement_id, service_id, recipient_name, recipient_id_type, recipient_id_number, allocated_by, receipt_reference, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [allocationNumber, mv.insertId, serviceId, recipient, recipientIdType, recipientIdNumber, req.auth.userId, req.body?.receiptReference || null, req.body?.notes || null]
       );
       for (const line of lines) {
         const lineResult = await tx.query('INSERT INTO stock_movement_lines (stock_movement_id, material_id, quantity) VALUES (?, ?, ?)', [mv.insertId, Number(line.materialId), Number(line.quantity)]);

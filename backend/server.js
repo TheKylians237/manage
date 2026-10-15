@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./db');
 const MySQLSessionStore = require('./session-store');
+const { startMaintenanceReminderScheduler } = require('./services/maintenance-reminder-scheduler');
 const { csrfProtection, requireAuth } = require('./middleware/security');
 const { notFound, errorHandler } = require('./middleware/errors');
 const { router: apiRouter } = require('./routes');
@@ -146,6 +147,15 @@ db.healthcheck().then(async () => {
     }
     throw error;
   }
+  try {
+    await db.query('SELECT reminder_email_sent_at, reminder_email_claimed_at FROM maintenance_sessions LIMIT 0');
+  } catch (error) {
+    if (error.code === 'ER_BAD_FIELD_ERROR') {
+      throw new Error('Schéma incomplet : exécutez backend/database/maintenance-reminders.sql avant de démarrer.');
+    }
+    throw error;
+  }
+  startMaintenanceReminderScheduler();
   app.listen(port, () => console.log(`Mat-Manage écoute sur ${process.env.APP_ORIGIN}`));
 }).catch(error => {
   console.error(error.message.startsWith('Schéma incomplet') ? error.message : 'Impossible de joindre MySQL ou de vérifier son schéma. Vérifiez la base, les migrations et le fichier .env.', error.code || error.name);
