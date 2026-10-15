@@ -12,3 +12,6 @@ Pour l’exécution détaillée des maintenances, exécuter une seule fois `back
 
 
 La migration `backend/database/supervision-stock.sql` doit être appliquée après `maintenance-execution.sql`. Elle ajoute le stock privé des maintenanciers, les notifications de retour, les évaluations journalières et le rôle Superviseur. Les dashboards offrent des regroupements journalier, hebdomadaire, mensuel et annuel avec les pourcentages de répartition. L’historique personnel est dans Profil; le journal global filtrable est réservé à l’Administrateur. Les fonctions de commandes, demandes de prix et fournisseurs ont été retirées de l’interface et des routes de l’application.
+
+
+Le site Mat-Manage est servi à la racine de l’application. Le guide complet est disponible sur `/installation`; le paquet local se génère avec `powershell -ExecutionPolicy Bypass -File backend/scripts/package-release.ps1`. Configurez le réseau et le pare-feu selon `backend/INSTALLATION.md`.

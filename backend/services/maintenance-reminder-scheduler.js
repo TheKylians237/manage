@@ -1,7 +1,7 @@
 'use strict';
 
 const db = require('../db');
-const { sendMaintenanceReminder } = require('../mailer');
+const { sendMaintenanceReminder, isSmtpConfigured } = require('../mailer');
 
 let running = false;
 let missingSmtpWarningShown = false;
@@ -10,9 +10,9 @@ async function sendDueReminders() {
   if (running) return;
   running = true;
   try {
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+    if (!isSmtpConfigured()) {
       if (!missingSmtpWarningShown) {
-        console.warn('Rappels de maintenance par e-mail désactivés : configurez SMTP_HOST, SMTP_USER et SMTP_PASSWORD.');
+        console.warn('Rappels de maintenance par e-mail désactivés : configurez MAIL_HOST, MAIL_USER et MAIL_PASS (ou SMTP_HOST, SMTP_USER et SMTP_PASSWORD).');
         missingSmtpWarningShown = true;
       }
       return;

@@ -24,7 +24,14 @@ window.MatApi = (() => {
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (readPreferences().theme === 'system') applyPreferences(); });
   async function getCsrf() {
     const response = await fetch('/api/auth/csrf', { credentials: 'same-origin', cache: 'no-store' });
-    const data = await response.json(); csrf = data.csrfToken; return csrf;
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.csrfToken) throw new Error(data.error || 'Impossible de préparer la connexion sécurisée.');
+    csrf = data.csrfToken; return csrf;
+  }
+  async function initialize() {
+    const [health] = await Promise.all([request('/api/health'), getCsrf()]);
+    if (!health.ok) throw new Error('Le serveur n’est pas encore prêt.');
+    return health;
   }
   async function request(url, options = {}) {
     const method = (options.method || 'GET').toUpperCase();
@@ -49,5 +56,5 @@ window.MatApi = (() => {
     const node = document.createElement('div'); node.className = `toast${isError ? ' error' : ''}`; node.textContent = message;
     host.append(node); setTimeout(() => node.remove(), 3500);
   }
-  return { request, getCsrf, escape, toast, readPreferences, savePreferences, setPreferenceScope };
+  return { request, getCsrf, initialize, escape, toast, readPreferences, savePreferences, setPreferenceScope };
 })();

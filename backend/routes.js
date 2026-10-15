@@ -12,6 +12,8 @@ const oversight = require('./controllers/oversight.controller');
 const users = require('./controllers/users.controller');
 const services = require('./controllers/services.controller');
 const settings = require('./controllers/settings.controller');
+const site = require('./controllers/site.controller');
+const { describeClientIp, confirmLoginIp } = require('./middleware/network-access');
 const { csrfToken, requireAuth, requirePermission, auditMutations } = require('./middleware/security');
 
 const router = express.Router();
@@ -19,8 +21,9 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const materialRead = requirePermission('MATERIALS_READ');
 
 router.get('/auth/csrf', csrfToken);
+router.get('/auth/client-ip', describeClientIp);
 router.get('/auth/status', auth.status);
-router.post('/auth/login', auth.login);
+router.post('/auth/login', confirmLoginIp, auth.login);
 router.post('/auth/register', auth.register);
 router.post('/auth/password-reset/request', auth.requestPasswordReset);
 router.post('/auth/password-reset/confirm', auth.resetPassword);
@@ -28,6 +31,7 @@ router.post('/auth/mfa/setup', auth.beginEnrollment);
 router.post('/auth/mfa/confirm', auth.confirmEnrollment);
 router.post('/auth/mfa/verify', auth.verifySecondFactor);
 router.post('/auth/logout', auth.logout);
+router.post('/public/reviews', site.submitReview);
 
 router.use(requireAuth);
 router.use(auditMutations);

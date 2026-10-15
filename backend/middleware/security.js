@@ -18,10 +18,14 @@ function csrfToken(req, res) {
 
 function csrfProtection(req, res, next) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  const expectedOrigin = process.env.APP_ORIGIN;
   const origin = req.get('origin');
-  if (origin && expectedOrigin && origin !== expectedOrigin) {
-    return res.status(403).json({ error: 'Origine de requête refusée.' });
+  if (origin) {
+    try {
+      const expectedOrigin = new URL(`${req.protocol}://${req.get('host')}`).origin;
+      if (new URL(origin).origin !== expectedOrigin) return res.status(403).json({ error: 'Origine de requête refusée.' });
+    } catch {
+      return res.status(403).json({ error: 'Origine de requête invalide.' });
+    }
   }
   const token = req.get('x-csrf-token');
   if (!constantTimeEqual(token, req.session?.csrfToken)) {

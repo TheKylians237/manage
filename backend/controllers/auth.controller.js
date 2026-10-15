@@ -117,7 +117,7 @@ async function requestPasswordReset(req, res, next) {
       const token = crypto.randomBytes(32).toString('base64url');
       await db.query('UPDATE password_reset_tokens SET used_at = UTC_TIMESTAMP() WHERE user_id = ? AND used_at IS NULL', [user.user_id]);
       await db.query('INSERT INTO password_reset_tokens(user_id, token_hash, expires_at) VALUES(?, ?, DATE_ADD(UTC_TIMESTAMP(), INTERVAL 30 MINUTE))', [user.user_id, tokenHash(token)]);
-      const base = String(process.env.APP_ORIGIN).replace(/\/$/, '');
+      const base = String(process.env.APP_PUBLIC_ORIGIN || process.env.APP_ORIGIN).replace(/\/$/, '');
       await mailer.sendPasswordReset(user, `${base}/reset-password.html?token=${encodeURIComponent(token)}`);
     }
     res.json({ ok: true, message: 'Si un compte correspond à cette adresse, un lien de réinitialisation vient d’être envoyé.' });

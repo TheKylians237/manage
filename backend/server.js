@@ -1,6 +1,9 @@
 'use strict';
 
 const path = require('node:path');
+const os = require('node:os');
+const fs = require('node:fs');
+const https = require('node:https');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
@@ -11,6 +14,7 @@ const db = require('./db');
 const MySQLSessionStore = require('./session-store');
 const { startMaintenanceReminderScheduler } = require('./services/maintenance-reminder-scheduler');
 const { csrfProtection, requireAuth } = require('./middleware/security');
+const { networkAccess } = require('./middleware/network-access');
 const { notFound, errorHandler } = require('./middleware/errors');
 const { router: apiRouter } = require('./routes');
 
@@ -25,13 +29,22 @@ if ((process.env.SESSION_SECRET || '').length < 32) throw new Error('SESSION_SEC
 
 const app = express();
 const production = process.env.NODE_ENV === 'production';
+const tlsCertFile = String(process.env.TLS_CERT_FILE || '').trim();
+const tlsKeyFile = String(process.env.TLS_KEY_FILE || '').trim();
+if (Boolean(tlsCertFile) !== Boolean(tlsKeyFile)) throw new Error('TLS_CERT_FILE et TLS_KEY_FILE doivent être configurés ensemble.');
+if (production && !tlsCertFile) throw new Error('NODE_ENV=production exige TLS_CERT_FILE et TLS_KEY_FILE afin de protéger les identifiants et les cookies de session.');
+const tlsOptions = tlsCertFile ? { cert: fs.readFileSync(path.resolve(__dirname, tlsCertFile)), key: fs.readFileSync(path.resolve(__dirname, tlsKeyFile)) } : null;
 const publicDir = path.join(__dirname, 'public');
 const cookieName = production ? '__Host-mat.sid' : 'mat.sid';
 
 app.disable('x-powered-by');
-if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
+const trustedProxies = String(process.env.TRUST_PROXY || '0').split(',').map(value => value.trim()).filter(Boolean);
+if (trustedProxies.some(value => value === '1' || value.toLowerCase() === 'true')) throw new Error('TRUST_PROXY ne peut pas être défini à 1/true. Indiquez les adresses IP ou CIDR exacts de vos reverse proxies.');
+if (!(trustedProxies.length === 1 && trustedProxies[0] === '0')) app.set('trust proxy', trustedProxies);
 
 app.use(helmet({
+  crossOriginOpenerPolicy: false,
+  originAgentCluster: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"], baseUri: ["'self'"], objectSrc: ["'none'"],
@@ -46,6 +59,7 @@ app.use(helmet({
 
 app.use(express.json({ limit: '1mb', strict: true }));
 app.use(express.urlencoded({ extended: false, limit: '16kb' }));
+app.use(networkAccess);
 
 app.use(session({
   name: cookieName,
@@ -56,7 +70,7 @@ app.use(session({
   rolling: true,
   cookie: {
     httpOnly: true,
-    secure: production,
+    secure: production || Boolean(tlsOptions),
     sameSite: 'strict',
     path: '/',
     maxAge: 8 * 60 * 60 * 1000
@@ -65,15 +79,28 @@ app.use(session({
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Trop de tentatives. Réessayez dans quelques minutes.' } });
 const mfaLimiter = rateLimit({ windowMs: 5 * 60 * 1000, limit: 8, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Trop de tentatives de code. Recommencez plus tard.' } });
+const reviewLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Trop d’avis envoyés depuis cet appareil. Réessayez plus tard.' } });
 
 app.use('/api', csrfProtection);
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', loginLimiter);
+app.use('/api/public/reviews', reviewLimiter);
 app.use('/api/auth/password-reset/request', loginLimiter);
 app.use(['/api/auth/mfa/verify', '/api/auth/mfa/confirm'], mfaLimiter);
 
+app.get('/api/health', async (req, res) => {
+  try {
+    await db.healthcheck();
+    res.set('Cache-Control', 'no-store').json({ ok: true });
+  } catch {
+    res.set('Cache-Control', 'no-store').status(503).json({ ok: false, error: 'Le serveur ou la base de données est momentanément indisponible.' });
+  }
+});
+
 app.use('/css', express.static(path.join(publicDir, 'css'), { maxAge: production ? '1d' : 0, etag: true }));
 app.use('/js', express.static(path.join(publicDir, 'js'), { maxAge: production ? '1d' : 0, etag: true }));
+app.use('/site', express.static(path.join(publicDir, 'site'), { maxAge: production ? '1h' : 0, etag: true }));
+app.use('/downloads', express.static(path.join(publicDir, 'downloads'), { maxAge: 0, etag: true, dotfiles: 'deny', fallthrough: true }));
 app.use('/image/avatars', requireAuth, express.static(path.join(publicDir, 'image', 'avatars'), { maxAge: production ? '7d' : 0, immutable: production, dotfiles: 'deny', fallthrough: false }));
 app.use('/api', apiRouter);
 
@@ -86,11 +113,13 @@ app.get('/', (req, res) => {
   if (req.session?.auth?.stage === 'authenticated') return res.redirect(`/dashboard-${String(req.session.auth.roleCode).toLowerCase()}.html`);
   if (req.session?.auth?.stage === 'preauth') return res.redirect('/mfa.html');
   if (req.session?.auth?.stage === 'mfa-setup') return res.redirect('/enroll-mfa.html');
-  res.redirect('/login.html');
+  res.sendFile(path.join(publicDir, 'site', 'index.html'));
 });
 
 app.get('/login.html', sendPage('login.html'));
 app.get('/register.html', sendPage('register.html'));
+app.get('/installation', (req, res) => res.sendFile(path.join(__dirname, 'INSTALLATION.md')));
+app.get('/installation.md', (req, res) => res.sendFile(path.join(__dirname, 'INSTALLATION.md')));
 app.get('/forgot-password.html', sendPage('forgot-password.html'));
 app.get('/reset-password.html', sendPage('reset-password.html'));
 app.get('/mfa.html', requirePreAuth('preauth'), sendPage('mfa.html'));
@@ -166,7 +195,13 @@ db.healthcheck().then(async () => {
     throw error;
   }
   startMaintenanceReminderScheduler();
-  app.listen(port, () => console.log(`Mat-Manage écoute sur ${process.env.APP_ORIGIN}`));
+  const listener = tlsOptions ? https.createServer(tlsOptions, app) : app;
+  listener.listen(port, '0.0.0.0', () => {
+    const addresses = Object.values(os.networkInterfaces()).flat().filter(item => item && item.family === 'IPv4' && !item.internal).map(item => item.address);
+    const protocol = tlsOptions ? 'https' : 'http';
+    console.log(`Mat-Manage écoute sur ${process.env.APP_ORIGIN}`);
+    if (addresses.length) console.log(`Accès réseau local : ${addresses.map(address => `${protocol}://${address}:${port}`).join(' · ')}`);
+  });
 }).catch(error => {
   console.error(error.message.startsWith('Schéma incomplet') ? error.message : 'Impossible de joindre MySQL ou de vérifier son schéma. Vérifiez la base, les migrations et le fichier .env.', error.code || error.name);
   process.exitCode = 1;

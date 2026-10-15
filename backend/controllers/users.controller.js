@@ -2,6 +2,7 @@
 
 const argon2 = require('argon2');
 const db = require('../db');
+const mailer = require('../mailer');
 const { decryptSecret, verifyTotp } = require('./auth.controller');
 
 const PASSWORD_RULE=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,256}$/;
@@ -25,8 +26,11 @@ async function create(req,res,next){
     if(!roles.length)return res.status(400).json({error:'Rôle inconnu.'});
     const hash=await argon2.hash(d.initialPassword,{type:argon2.argon2id,memoryCost:19456,timeCost:2,parallelism:1});
     if(department.length>120)return res.status(400).json({error:'Le département ne peut pas dépasser 120 caractères.'});
-    await db.query(`INSERT INTO users(matricule,full_name,email,password_hash,role_id,department_name,mfa_enabled,is_active) VALUES(?,?,?,?,?,?,FALSE,TRUE)`,[badge,name,email,hash,roles[0].role_id,department||null]);
-    res.status(201).json({ok:true,message:'Compte créé. Au premier accès, l’utilisateur devra enregistrer un second facteur TOTP.'});
+    const result=await db.query(`INSERT INTO users(matricule,full_name,email,password_hash,role_id,department_name,mfa_enabled,is_active) VALUES(?,?,?,?,?,?,FALSE,TRUE)`,[badge,name,email,hash,roles[0].role_id,department||null]);
+    let emailSent=false;
+    try{await mailer.sendNewAccountCredentials({full_name:name,email},badge,String(d.initialPassword));emailSent=true}
+    catch(error){console.error('Échec de l’envoi des identifiants du nouveau compte.',error.code||error.name)}
+    res.status(201).json({ok:true,emailSent,message:emailSent?'Compte créé. Les identifiants ont été envoyés par e-mail; un TOTP sera configuré à la première connexion.':'Compte créé, mais l’e-mail n’a pas pu être envoyé. Vérifiez la configuration SMTP et l’adresse saisie.',userId:result.insertId});
   }catch(error){if(error.code==='ER_DUP_ENTRY')return res.status(409).json({error:'Ce matricule ou cette adresse e-mail est déjà utilisé.'});next(error)}
 }
 

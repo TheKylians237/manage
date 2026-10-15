@@ -5,7 +5,7 @@ form.addEventListener('submit', async event => {
   const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Vérification…';
   try {
     await MatApi.getCsrf();
-    const data = await MatApi.request('/api/auth/login', { method: 'POST', body: { badge: form.matricule.value, password: form.password.value } });
+    const data = await MatApi.request('/api/auth/login', { method: 'POST', body: { badge: form.matricule.value, password: form.password.value, clientIp: form.clientIp.value } });
     location.assign(data.next);
   } catch (error) { alertBox.textContent = error.message; alertBox.classList.add('show'); }
   finally { button.disabled = false; button.textContent = 'Continuer avec le second facteur'; }

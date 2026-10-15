@@ -1,0 +1,7 @@
+'use strict';
+const menu=document.querySelector('.menu'),nav=document.querySelector('#nav');
+menu?.addEventListener('click',()=>{const expanded=menu.getAttribute('aria-expanded')==='true';menu.setAttribute('aria-expanded',String(!expanded));nav.classList.toggle('open',!expanded)});
+nav?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{nav.classList.remove('open');menu?.setAttribute('aria-expanded','false')}));
+document.querySelector('#year').textContent=new Date().getFullYear();
+fetch('/site/version.json',{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error();return response.json()}).then(release=>{document.querySelector('#release-version').textContent=`Version ${release.version} · Paquet serveur · ${release.updatedAt}`}).catch(()=>{document.querySelector('#release-version').textContent='Le paquet serveur est disponible au téléchargement.'});
+document.querySelector('#review-form').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('button[type="submit"]'),status=document.querySelector('#review-status');button.disabled=true;status.textContent='Envoi de votre avis…';try{const data=Object.fromEntries(new FormData(form));const result=await MatApi.request('/api/public/reviews',{method:'POST',body:{...data,rating:Number(data.rating)}});status.textContent=result.message;form.reset()}catch(error){status.textContent=error.message}finally{button.disabled=false}});

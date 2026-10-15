@@ -3,25 +3,41 @@
 const nodemailer = require('nodemailer');
 
 let transport = null;
+function smtpConfig() {
+  return {
+    host: process.env.SMTP_HOST || process.env.MAIL_HOST,
+    port: Number(process.env.SMTP_PORT || process.env.MAIL_PORT || 587),
+    user: process.env.SMTP_USER || process.env.MAIL_USER,
+    password: process.env.SMTP_PASSWORD || process.env.MAIL_PASS,
+    from: process.env.MAIL_FROM || process.env.SMTP_USER || process.env.MAIL_USER
+  };
+}
+
+function isSmtpConfigured() {
+  const config = smtpConfig();
+  return Boolean(config.host && config.user && config.password);
+}
+
 function getTransport() {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+  const config = smtpConfig();
+  if (!config.host || !config.user || !config.password) {
     throw new Error('La configuration SMTP est requise pour l’envoi de courriels.');
   }
   if (!transport) {
     transport = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
+      host: config.host,
+      port: config.port,
       secure: String(process.env.SMTP_SECURE).toLowerCase() === 'true',
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+      auth: { user: config.user, pass: config.password },
       tls: { minVersion: 'TLSv1.2' }
     });
   }
   return transport;
 }
 
-async function sendMail({ to, subject, text, html }) {
+async function sendMail({ to, subject, text, html, replyTo }) {
   if (!to) throw new TypeError('Destinataire manquant.');
-  return getTransport().sendMail({ from: process.env.MAIL_FROM, to, subject, text, html });
+  return getTransport().sendMail({ from: smtpConfig().from, to, subject, text, html, ...(replyTo ? { replyTo } : {}) });
 }
 
 async function sendSecurityNotice(user, message) {
@@ -56,8 +72,24 @@ async function sendMaintenanceReminder(maintenance, technician) {
   return sendMail({ to: technician.email, subject, text, html });
 }
 
+async function sendNewAccountCredentials(user, matricule, password) {
+  if (!user.email) throw new TypeError('Destinataire manquant.');
+  const subject = 'Vos identifiants Mat-Manage';
+  const text = `Bonjour ${user.full_name},\n\nVotre compte Mat-Manage a été créé.\nIdentifiant (matricule) : ${matricule}\nMot de passe initial : ${password}\n\nÀ votre première connexion, l’application vous demandera de configurer une application d’authentification TOTP. Conservez ce message en lieu sûr et changez votre mot de passe après connexion.`;
+  const html = `<p>Bonjour ${escapeHtml(user.full_name)},</p><p>Votre compte Mat-Manage a été créé.</p><ul><li><b>Identifiant (matricule) :</b> ${escapeHtml(matricule)}</li><li><b>Mot de passe initial :</b> ${escapeHtml(password)}</li></ul><p>À votre première connexion, configurez une application d’authentification TOTP. Conservez ce message en lieu sûr et changez votre mot de passe après connexion.</p>`;
+  return sendMail({ to: user.email, subject, text, html });
+}
+
+async function sendSiteFeedback({ name, email, rating, comment }) {
+  const to = process.env.SITE_CONTACT_EMAIL || 'ibihiang@gmail.com';
+  const subject = `Avis Mat-Manage · ${rating}/5`;
+  const text = `Nom : ${name}\nNote : ${rating}/5\n${email ? `E-mail : ${email}\n` : ''}\n${comment}`;
+  const html = `<p><b>Nom :</b> ${escapeHtml(name)}</p><p><b>Note :</b> ${rating}/5</p>${email ? `<p><b>E-mail :</b> ${escapeHtml(email)}</p>` : ''}<p>${escapeHtml(comment).replace(/\n/g, '<br>')}</p>`;
+  return sendMail({ to, subject, text, html, replyTo: email || undefined });
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-module.exports = { sendMail, sendSecurityNotice, sendPasswordReset, sendMaintenanceReminder };
+module.exports = { sendMail, sendSecurityNotice, sendPasswordReset, sendMaintenanceReminder, sendNewAccountCredentials, sendSiteFeedback, isSmtpConfigured };

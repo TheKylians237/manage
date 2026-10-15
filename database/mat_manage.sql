@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : jeu. 15 oct. 2026 à 04:14
+-- Généré le : jeu. 15 oct. 2026 à 12:27
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.0.30
 
@@ -56,6 +56,24 @@ CREATE TABLE `allocation_lines` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `app_notifications`
+--
+
+CREATE TABLE `app_notifications` (
+  `notification_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `notification_type` varchar(60) NOT NULL,
+  `title` varchar(180) NOT NULL,
+  `message` text NOT NULL,
+  `entity_name` varchar(80) DEFAULT NULL,
+  `entity_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `read_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `app_settings`
 --
 
@@ -100,7 +118,75 @@ INSERT INTO `audit_logs` (`audit_log_id`, `user_id`, `action_code`, `entity_name
 (4, 1, 'PASSWORD_VERIFIED', 'users', 1, '2026-10-14 18:00:26', NULL, NULL),
 (5, 1, 'LOGIN_SUCCESS', 'users', 1, '2026-10-14 18:00:57', NULL, NULL),
 (6, 1, 'PASSWORD_VERIFIED', 'users', 1, '2026-10-15 01:41:57', NULL, NULL),
-(7, 1, 'LOGIN_SUCCESS', 'users', 1, '2026-10-15 01:42:07', NULL, NULL);
+(7, 1, 'LOGIN_SUCCESS', 'users', 1, '2026-10-15 01:42:07', NULL, NULL),
+(8, 1, 'PASSWORD_VERIFIED', 'users', 1, '2026-10-15 07:39:43', NULL, NULL),
+(9, 1, 'LOGIN_SUCCESS', 'users', 1, '2026-10-15 07:39:53', NULL, NULL),
+(10, 1, 'MAINTENANCE_EXECUTED', 'maintenance_sessions', 2, '2026-10-15 08:26:24', NULL, NULL),
+(11, 1, 'PASSWORD_VERIFIED', 'users', 1, '2026-10-15 08:39:06', NULL, NULL),
+(12, 1, 'LOGIN_SUCCESS', 'users', 1, '2026-10-15 08:39:41', NULL, NULL),
+(13, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:29:54', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/dashboard\",\"status\":200,\"ip\":\"::1\"}'),
+(14, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:29:55', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(15, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:18', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(16, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:18', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/users\",\"status\":200,\"ip\":\"::1\"}'),
+(17, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:18', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"::1\"}'),
+(18, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:18', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"::1\"}'),
+(19, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:18', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"::1\"}'),
+(20, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:18', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"::1\"}'),
+(21, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:44', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(22, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:44', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"::1\"}'),
+(23, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:44', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"::1\"}'),
+(24, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:44', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"::1\"}'),
+(25, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:44', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"::1\"}'),
+(26, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:30:44', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/supervision/overview\",\"status\":200,\"ip\":\"::1\"}'),
+(27, 1, 'HTTP_POST', 'api_request', NULL, '2026-10-15 09:31:24', 0x00000000000000000000000000000001, '{\"method\":\"POST\",\"path\":\"/supervision/reviews\",\"status\":400,\"ip\":\"::1\"}'),
+(28, 1, 'HTTP_POST', 'api_request', NULL, '2026-10-15 09:31:35', 0x00000000000000000000000000000001, '{\"method\":\"POST\",\"path\":\"/supervision/reviews\",\"status\":400,\"ip\":\"::1\"}'),
+(29, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:32', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(30, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"::1\"}'),
+(31, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/material-summaries\",\"status\":200,\"ip\":\"::1\"}'),
+(32, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"::1\"}'),
+(33, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"::1\"}'),
+(34, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"::1\"}'),
+(35, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"::1\"}'),
+(36, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"::1\"}'),
+(37, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:33', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/stock-organization\",\"status\":200,\"ip\":\"::1\"}'),
+(38, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:35', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/dashboard\",\"status\":200,\"ip\":\"::1\"}'),
+(39, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:35', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(40, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:46', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/dashboard\",\"status\":200,\"ip\":\"::1\"}'),
+(41, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:44:46', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(42, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:20', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(43, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:21', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"::1\"}'),
+(44, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:21', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/settings\",\"status\":200,\"ip\":\"::1\"}'),
+(45, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:21', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"::1\"}'),
+(46, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:21', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"::1\"}'),
+(47, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:21', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"::1\"}'),
+(48, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:47:21', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/users\",\"status\":200,\"ip\":\"::1\"}'),
+(49, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(50, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/settings\",\"status\":200,\"ip\":\"::1\"}'),
+(51, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"::1\"}'),
+(52, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"::1\"}'),
+(53, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"::1\"}'),
+(54, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"::1\"}'),
+(55, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:49', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/users\",\"status\":200,\"ip\":\"::1\"}'),
+(56, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 09:51:54', 0x00000000000000000000000000000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"::1\"}'),
+(57, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:22:55', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/dashboard\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(58, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:22:55', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(59, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:10', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(60, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:10', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/users\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(61, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:10', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(62, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:10', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(63, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:10', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(64, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:10', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(65, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(66, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/categories\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(67, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/material-summaries\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(68, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(69, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(70, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/services\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(71, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/materials\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(72, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/locations\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(73, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:23:17', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/stock-organization\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(74, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:24:38', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/dashboard\",\"status\":200,\"ip\":\"127.0.0.1\"}'),
+(75, 1, 'HTTP_GET', 'api_request', NULL, '2026-10-15 10:24:38', 0x7f000001, '{\"method\":\"GET\",\"path\":\"/profile\",\"status\":200,\"ip\":\"127.0.0.1\"}');
 
 -- --------------------------------------------------------
 
@@ -167,6 +253,23 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `employee_daily_reviews`
+--
+
+CREATE TABLE `employee_daily_reviews` (
+  `review_id` bigint(20) UNSIGNED NOT NULL,
+  `employee_user_id` bigint(20) UNSIGNED NOT NULL,
+  `supervisor_user_id` bigint(20) UNSIGNED NOT NULL,
+  `review_date` date NOT NULL,
+  `rating` tinyint(3) UNSIGNED NOT NULL,
+  `opinion` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `http_sessions`
 --
 
@@ -181,8 +284,9 @@ CREATE TABLE `http_sessions` (
 --
 
 INSERT INTO `http_sessions` (`session_id`, `expires_at`, `session_data`) VALUES
-('GGhWRavuhJxTtnZjAZ8zvbeWskLLJ_bL', 1792057261799, '{\"cookie\":{\"originalMaxAge\":28800000,\"expires\":\"2026-10-15T02:00:57.821Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"strict\"},\"auth\":{\"stage\":\"authenticated\",\"userId\":1,\"roleCode\":\"STOREKEEPER\",\"sessionVersion\":1},\"csrfToken\":\"PtOrDvZoAyGGQkg7LZiCZsbaz6Sl7TefK7bCpLc4Yyw\"}'),
-('L8OxPhQXFlkqiVNt92TksdF9DGx7YFwa', 1792058945229, '{\"cookie\":{\"originalMaxAge\":28800000,\"expires\":\"2026-10-15T09:42:07.470Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"strict\"},\"auth\":{\"stage\":\"authenticated\",\"userId\":1,\"roleCode\":\"STOREKEEPER\",\"sessionVersion\":1},\"csrfToken\":\"vCx1x-x9_HeMDWSieOnblYqSynq32gzhZiCAT7yAsUo\"}');
+('GGhWRavuhJxTtnZjAZ8zvbeWskLLJ_bL', 1792078676495, '{\"cookie\":{\"originalMaxAge\":28800000,\"expires\":\"2026-10-15T02:00:57.821Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"strict\"},\"auth\":{\"stage\":\"authenticated\",\"userId\":1,\"roleCode\":\"STOREKEEPER\",\"sessionVersion\":1},\"csrfToken\":\"PtOrDvZoAyGGQkg7LZiCZsbaz6Sl7TefK7bCpLc4Yyw\"}'),
+('GuD6DaYBy4rE7uchCLZDzMuotU9m-swX', 1792086714317, '{\"cookie\":{\"originalMaxAge\":28800000,\"expires\":\"2026-10-15T16:39:41.577Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"strict\"},\"auth\":{\"stage\":\"authenticated\",\"userId\":1,\"roleCode\":\"ADMIN\",\"sessionVersion\":1},\"csrfToken\":\"LMmievbQIvemWTebINqQLMVgr5FUsnvth8zBrflmDkk\"}'),
+('L8OxPhQXFlkqiVNt92TksdF9DGx7YFwa', 1792088713426, '{\"cookie\":{\"originalMaxAge\":28800000,\"expires\":\"2026-10-15T09:42:07.470Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"strict\"},\"auth\":{\"stage\":\"authenticated\",\"userId\":1,\"roleCode\":\"STOREKEEPER\",\"sessionVersion\":1},\"csrfToken\":\"vCx1x-x9_HeMDWSieOnblYqSynq32gzhZiCAT7yAsUo\"}');
 
 -- --------------------------------------------------------
 
@@ -194,6 +298,7 @@ CREATE TABLE `locations` (
   `location_id` bigint(20) UNSIGNED NOT NULL,
   `parent_location_id` bigint(20) UNSIGNED DEFAULT NULL,
   `category_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `owner_user_id` bigint(20) UNSIGNED DEFAULT NULL,
   `location_code` varchar(40) NOT NULL,
   `location_name` varchar(120) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
@@ -204,22 +309,22 @@ CREATE TABLE `locations` (
 -- Déchargement des données de la table `locations`
 --
 
-INSERT INTO `locations` (`location_id`, `parent_location_id`, `category_id`, `location_code`, `location_name`, `description`, `is_active`) VALUES
-(1, NULL, NULL, 'MAG-GENERAL', 'Magasin général', 'Emplacement principal; à adapter à l’organisation locale', 1),
-(2, NULL, NULL, 'MAG-0002', 'Emplacement 0002', 'Laptops', 1),
-(3, NULL, 1, 'CAT-1', 'Stock Informatique', 'Emplacement généré automatiquement pour la catégorie Informatique', 1),
-(4, NULL, 2, 'CAT-2', 'Stock Réseau', 'Emplacement généré automatiquement pour la catégorie Réseau', 1),
-(5, NULL, 3, 'CAT-3', 'Stock Télécommunications', 'Emplacement généré automatiquement pour la catégorie Télécommunications', 1),
-(6, NULL, 4, 'CAT-4', 'Stock Énergie', 'Emplacement généré automatiquement pour la catégorie Énergie', 1),
-(7, NULL, 5, 'CAT-5', 'Stock Périphériques', 'Emplacement généré automatiquement pour la catégorie Périphériques', 1),
-(8, NULL, 6, 'CAT-6', 'Stock Accessoires', 'Emplacement généré automatiquement pour la catégorie Accessoires', 1),
-(9, NULL, 7, 'CAT-7', 'Stock Accessoires Et Peripheriques Reseau', 'Emplacement généré automatiquement pour la catégorie Accessoires Et Peripheriques Reseau', 1),
-(10, NULL, 8, 'CAT-8', 'Stock Alimentation, Onduleurs Et Boitiers', 'Emplacement généré automatiquement pour la catégorie Alimentation, Onduleurs Et Boitiers', 1),
-(11, NULL, 9, 'CAT-9', 'Stock Claviers, Souris et Accessoires Ergonomiques', 'Emplacement généré automatiquement pour la catégorie Claviers, Souris et Accessoires Ergonomiques', 1),
-(12, NULL, 10, 'CAT-10', 'Stock Equipements de Réseau d\'Entreprise', 'Emplacement généré automatiquement pour la catégorie Equipements de Réseau d\'Entreprise', 1),
-(13, NULL, 11, 'CAT-11', 'Stock Impression et Numérisation', 'Emplacement généré automatiquement pour la catégorie Impression et Numérisation', 1),
-(14, NULL, 12, 'CAT-12', 'Stock Ordinateurs Portable et Fixes', 'Emplacement généré automatiquement pour la catégorie Ordinateurs Portable et Fixes', 1),
-(15, NULL, 13, 'CAT-13', 'Stock Stockage et Sauvegarde', 'Emplacement généré automatiquement pour la catégorie Stockage et Sauvegarde', 1);
+INSERT INTO `locations` (`location_id`, `parent_location_id`, `category_id`, `owner_user_id`, `location_code`, `location_name`, `description`, `is_active`) VALUES
+(1, NULL, NULL, NULL, 'MAG-GENERAL', 'Magasin général', 'Emplacement principal; à adapter à l’organisation locale', 1),
+(2, NULL, NULL, NULL, 'MAG-0002', 'Emplacement 0002', 'Laptops', 1),
+(3, NULL, 1, NULL, 'CAT-1', 'Stock Informatique', 'Emplacement généré automatiquement pour la catégorie Informatique', 1),
+(4, NULL, 2, NULL, 'CAT-2', 'Stock Réseau', 'Emplacement généré automatiquement pour la catégorie Réseau', 1),
+(5, NULL, 3, NULL, 'CAT-3', 'Stock Télécommunications', 'Emplacement généré automatiquement pour la catégorie Télécommunications', 1),
+(6, NULL, 4, NULL, 'CAT-4', 'Stock Énergie', 'Emplacement généré automatiquement pour la catégorie Énergie', 1),
+(7, NULL, 5, NULL, 'CAT-5', 'Stock Périphériques', 'Emplacement généré automatiquement pour la catégorie Périphériques', 1),
+(8, NULL, 6, NULL, 'CAT-6', 'Stock Accessoires', 'Emplacement généré automatiquement pour la catégorie Accessoires', 1),
+(9, NULL, 7, NULL, 'CAT-7', 'Stock Accessoires Et Peripheriques Reseau', 'Emplacement généré automatiquement pour la catégorie Accessoires Et Peripheriques Reseau', 1),
+(10, NULL, 8, NULL, 'CAT-8', 'Stock Alimentation, Onduleurs Et Boitiers', 'Emplacement généré automatiquement pour la catégorie Alimentation, Onduleurs Et Boitiers', 1),
+(11, NULL, 9, NULL, 'CAT-9', 'Stock Claviers, Souris et Accessoires Ergonomiques', 'Emplacement généré automatiquement pour la catégorie Claviers, Souris et Accessoires Ergonomiques', 1),
+(12, NULL, 10, NULL, 'CAT-10', 'Stock Equipements de Réseau d\'Entreprise', 'Emplacement généré automatiquement pour la catégorie Equipements de Réseau d\'Entreprise', 1),
+(13, NULL, 11, NULL, 'CAT-11', 'Stock Impression et Numérisation', 'Emplacement généré automatiquement pour la catégorie Impression et Numérisation', 1),
+(14, NULL, 12, NULL, 'CAT-12', 'Stock Ordinateurs Portable et Fixes', 'Emplacement généré automatiquement pour la catégorie Ordinateurs Portable et Fixes', 1),
+(15, NULL, 13, NULL, 'CAT-13', 'Stock Stockage et Sauvegarde', 'Emplacement généré automatiquement pour la catégorie Stockage et Sauvegarde', 1);
 
 -- --------------------------------------------------------
 
@@ -248,6 +353,8 @@ CREATE TABLE `maintenance_sessions` (
   `service_id` bigint(20) UNSIGNED DEFAULT NULL,
   `reported_by` bigint(20) UNSIGNED NOT NULL,
   `technician_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `executed_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `stock_source_location_id` bigint(20) UNSIGNED DEFAULT NULL,
   `maintenance_type` enum('PREVENTIVE','REPAIR','DIAGNOSTIC','INSTALLATION','OTHER') NOT NULL,
   `status` enum('PLANNED','IN_PROGRESS','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PLANNED',
   `scheduled_at` datetime NOT NULL,
@@ -255,11 +362,24 @@ CREATE TABLE `maintenance_sessions` (
   `completed_at` datetime DEFAULT NULL,
   `duration_minutes` int(10) UNSIGNED DEFAULT NULL,
   `problem_description` text DEFAULT NULL,
+  `diagnosis` text DEFAULT NULL,
   `actions_taken` text DEFAULT NULL,
+  `comments` text DEFAULT NULL,
+  `conclusion` enum('FUNCTIONAL','DEFECTIVE') DEFAULT NULL,
   `parts_cost` decimal(14,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `reminder_email_claimed_at` datetime DEFAULT NULL,
+  `reminder_email_sent_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `maintenance_sessions`
+--
+
+INSERT INTO `maintenance_sessions` (`maintenance_id`, `maintenance_number`, `material_id`, `asset_id`, `service_id`, `reported_by`, `technician_id`, `executed_by`, `stock_source_location_id`, `maintenance_type`, `status`, `scheduled_at`, `started_at`, `completed_at`, `duration_minutes`, `problem_description`, `diagnosis`, `actions_taken`, `comments`, `conclusion`, `parts_cost`, `created_at`, `updated_at`, `reminder_email_claimed_at`, `reminder_email_sent_at`) VALUES
+(1, 'MAINT-1792050271295', 1, NULL, NULL, 1, NULL, NULL, NULL, 'PREVENTIVE', 'COMPLETED', '2026-10-15 07:45:00', NULL, '2026-10-15 08:05:58', NULL, NULL, NULL, NULL, NULL, NULL, 0.00, '2026-10-15 07:44:31', '2026-10-15 08:05:58', NULL, NULL),
+(2, 'MAINT-1792051634450', 1, NULL, NULL, 1, 1, 1, NULL, 'PREVENTIVE', 'COMPLETED', '2026-10-15 08:08:00', '2026-10-15 08:26:24', '2026-10-15 08:26:24', 10, 'vérifications', 'Cable en bon etat', 'test de contuité', 'Rien à signaler', 'FUNCTIONAL', 0.00, '2026-10-15 08:07:14', '2026-10-15 08:26:24', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -279,10 +399,18 @@ CREATE TABLE `materials` (
   `minimum_stock` decimal(12,2) NOT NULL DEFAULT 0.00,
   `description` text DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `merged_into_material_id` bigint(20) UNSIGNED DEFAULT NULL,
   `created_by` bigint(20) UNSIGNED DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `operational_status` enum('AVAILABLE','IN_MAINTENANCE','DAMAGED','RETIRED') NOT NULL DEFAULT 'AVAILABLE'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `materials`
+--
+
+INSERT INTO `materials` (`material_id`, `material_code`, `designation`, `category_id`, `brand`, `model`, `serial_number`, `mac_address`, `minimum_stock`, `description`, `is_active`, `merged_into_material_id`, `created_by`, `updated_at`, `operational_status`) VALUES
+(1, 'MAT-000001', 'CORDON PATCH RJ45 5E CAT GRIS 15M', 7, 'DELL', 'ASCDES', '333289290123131', NULL, 3.00, 'Laptops', 1, NULL, 1, '2026-10-15 08:26:24', 'AVAILABLE');
 
 -- --------------------------------------------------------
 
@@ -4265,7 +4393,9 @@ INSERT INTO `permissions` (`permission_id`, `permission_code`, `description`) VA
 (6, 'MAINTENANCE_MANAGE', 'Créer, modifier et clôturer les maintenances'),
 (7, 'SUPPLIERS_MANAGE', 'Gérer les fournisseurs'),
 (8, 'PURCHASING_MANAGE', 'Gérer les demandes de prix et commandes'),
-(9, 'REPORTS_READ', 'Consulter et exporter les rapports');
+(9, 'REPORTS_READ', 'Consulter et exporter les rapports'),
+(10, 'SUPERVISION_READ', 'Consulter les statistiques globales, les mouvements et les évaluations'),
+(11, 'SUPERVISION_REVIEW', 'Attribuer les évaluations journalières des agents');
 
 -- --------------------------------------------------------
 
@@ -4370,7 +4500,8 @@ CREATE TABLE `roles` (
 INSERT INTO `roles` (`role_id`, `role_code`, `role_name`, `description`, `created_at`) VALUES
 (1, 'ADMIN', 'Administrateur', 'Administration des comptes, rôles et référentiels', '2026-10-09 07:46:23'),
 (3, 'STOREKEEPER', 'Magasinier', 'Inventaire, emplacements et mouvements de stock', '2026-10-09 07:46:23'),
-(4, 'MAINTAINER', 'Maintenancier', 'Planification et suivi des maintenances', '2026-10-09 07:46:23');
+(4, 'MAINTAINER', 'Maintenancier', 'Planification et suivi des maintenances', '2026-10-09 07:46:23'),
+(5, 'SUPERVISOR', 'Superviseur', 'Vue globale des opérations, statistiques et évaluations du personnel', '2026-10-15 09:14:18');
 
 -- --------------------------------------------------------
 
@@ -4404,7 +4535,11 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (3, 9),
 (4, 2),
 (4, 6),
-(4, 9);
+(4, 9),
+(5, 2),
+(5, 9),
+(5, 10),
+(5, 11);
 
 -- --------------------------------------------------------
 
@@ -4441,6 +4576,13 @@ CREATE TABLE `stock_balances` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Déchargement des données de la table `stock_balances`
+--
+
+INSERT INTO `stock_balances` (`material_id`, `location_id`, `quantity`, `updated_at`) VALUES
+(1, 9, 1.00, '2026-10-15 02:35:42');
+
 -- --------------------------------------------------------
 
 --
@@ -4464,6 +4606,13 @@ CREATE TABLE `stock_movements` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Déchargement des données de la table `stock_movements`
+--
+
+INSERT INTO `stock_movements` (`stock_movement_id`, `movement_number`, `movement_type`, `movement_date`, `source_location_id`, `destination_location_id`, `service_id`, `supplier_id`, `purchase_order_id`, `performed_by`, `recipient_name`, `document_reference`, `notes`, `created_at`) VALUES
+(1, 'AUTO-1792031742922-b18b4b14', 'IN', '2026-10-15 03:35:42', NULL, 9, NULL, NULL, NULL, 1, NULL, '01-001-220062', 'Ajout automatique : désignation similaire à CORDON PATCH RJ45 5E CAT GRIS 15M (100 %).', '2026-10-15 02:35:42');
+
 -- --------------------------------------------------------
 
 --
@@ -4477,6 +4626,13 @@ CREATE TABLE `stock_movement_lines` (
   `quantity` decimal(12,2) NOT NULL,
   `unit_cost` decimal(14,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `stock_movement_lines`
+--
+
+INSERT INTO `stock_movement_lines` (`stock_movement_line_id`, `stock_movement_id`, `material_id`, `quantity`, `unit_cost`) VALUES
+(1, 1, 1, 1.00, NULL);
 
 --
 -- Déclencheurs `stock_movement_lines`
@@ -4596,6 +4752,7 @@ CREATE TABLE `users` (
   `full_name` varchar(150) NOT NULL,
   `email` varchar(254) DEFAULT NULL,
   `phone` varchar(30) DEFAULT NULL,
+  `department_name` varchar(120) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL COMMENT 'Hash sécurisé généré côté serveur, jamais le mot de passe en clair',
   `mfa_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `totp_secret_enc` varbinary(512) DEFAULT NULL,
@@ -4617,8 +4774,8 @@ CREATE TABLE `users` (
 -- Déchargement des données de la table `users`
 --
 
-INSERT INTO `users` (`user_id`, `matricule`, `full_name`, `email`, `phone`, `password_hash`, `mfa_enabled`, `totp_secret_enc`, `totp_last_step`, `role_id`, `is_active`, `last_login_at`, `two_factor_code`, `avatar_url`, `two_factor_expires`, `created_at`, `updated_at`, `failed_login_count`, `locked_until`, `session_version`) VALUES
-(1, '22222222', 'mbea', 'ibihiang@gmail.com', NULL, '$argon2id$v=19$m=19456,t=2,p=1$KJroACTBf/DCYjbe06cXyg$6vH5fUsmzWhpY4hTku1d3WxOxZ1L9CRpVN9dwtRC0IA', 1, 0x8303cca95ff02a82db57c483b23c9a22e096b661b65dde9a0eb81ccd60137d0c8242e5be89851b561ccb7c251ff56e063942f98c89fa471099f5023a, 59734284, 3, 1, '2026-10-15 01:42:07', NULL, NULL, NULL, '2026-10-14 16:10:01', '2026-10-15 01:42:07', 0, NULL, 1);
+INSERT INTO `users` (`user_id`, `matricule`, `full_name`, `email`, `phone`, `department_name`, `password_hash`, `mfa_enabled`, `totp_secret_enc`, `totp_last_step`, `role_id`, `is_active`, `last_login_at`, `two_factor_code`, `avatar_url`, `two_factor_expires`, `created_at`, `updated_at`, `failed_login_count`, `locked_until`, `session_version`) VALUES
+(1, '22222222', 'mbea', 'ibihiang@gmail.com', NULL, 'Informatique', '$argon2id$v=19$m=19456,t=2,p=1$KJroACTBf/DCYjbe06cXyg$6vH5fUsmzWhpY4hTku1d3WxOxZ1L9CRpVN9dwtRC0IA', 1, 0x8303cca95ff02a82db57c483b23c9a22e096b661b65dde9a0eb81ccd60137d0c8242e5be89851b561ccb7c251ff56e063942f98c89fa471099f5023a, 59735119, 1, 1, '2026-10-15 08:39:41', NULL, NULL, NULL, '2026-10-14 16:10:01', '2026-10-15 08:46:40', 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -4646,7 +4803,7 @@ CREATE TABLE `v_material_stock` (
 --
 DROP TABLE IF EXISTS `v_material_stock`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_material_stock`  AS SELECT `m`.`material_id` AS `material_id`, `m`.`material_code` AS `material_code`, `m`.`designation` AS `designation`, `m`.`category_id` AS `category_id`, `m`.`brand` AS `brand`, `m`.`model` AS `model`, `m`.`minimum_stock` AS `minimum_stock`, `m`.`operational_status` AS `operational_status`, coalesce(sum(`sb`.`quantity`),0) AS `total_quantity`, CASE WHEN coalesce(sum(`sb`.`quantity`),0) <= `m`.`minimum_stock` THEN 1 ELSE 0 END AS `is_below_minimum` FROM (`materials` `m` left join `stock_balances` `sb` on(`sb`.`material_id` = `m`.`material_id`)) WHERE `m`.`is_active` = 1 GROUP BY `m`.`material_id`, `m`.`material_code`, `m`.`designation`, `m`.`category_id`, `m`.`brand`, `m`.`model`, `m`.`minimum_stock`, `m`.`operational_status` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_material_stock`  AS SELECT `m`.`material_id` AS `material_id`, `m`.`material_code` AS `material_code`, `m`.`designation` AS `designation`, `m`.`category_id` AS `category_id`, `m`.`brand` AS `brand`, `m`.`model` AS `model`, `m`.`minimum_stock` AS `minimum_stock`, `m`.`operational_status` AS `operational_status`, coalesce(sum(`sb`.`quantity`),0) AS `total_quantity`, CASE WHEN coalesce(sum(`sb`.`quantity`),0) <= `m`.`minimum_stock` THEN 1 ELSE 0 END AS `is_below_minimum` FROM (`materials` `m` left join `stock_balances` `sb` on(`sb`.`material_id` = `m`.`material_id`)) WHERE `m`.`is_active` = 1 AND `m`.`merged_into_material_id` is null GROUP BY `m`.`material_id`, `m`.`material_code`, `m`.`designation`, `m`.`category_id`, `m`.`brand`, `m`.`model`, `m`.`minimum_stock`, `m`.`operational_status` ;
 
 --
 -- Index pour les tables déchargées
@@ -4671,6 +4828,13 @@ ALTER TABLE `allocation_lines`
   ADD KEY `fk_al_allocation` (`allocation_id`);
 
 --
+-- Index pour la table `app_notifications`
+--
+ALTER TABLE `app_notifications`
+  ADD PRIMARY KEY (`notification_id`),
+  ADD KEY `ix_app_notifications_user_read` (`user_id`,`read_at`,`created_at`);
+
+--
 -- Index pour la table `app_settings`
 --
 ALTER TABLE `app_settings`
@@ -4693,6 +4857,15 @@ ALTER TABLE `categories`
   ADD KEY `fk_categories_parent` (`parent_category_id`);
 
 --
+-- Index pour la table `employee_daily_reviews`
+--
+ALTER TABLE `employee_daily_reviews`
+  ADD PRIMARY KEY (`review_id`),
+  ADD UNIQUE KEY `uq_employee_daily_review` (`employee_user_id`,`review_date`),
+  ADD KEY `ix_daily_reviews_date` (`review_date`,`employee_user_id`),
+  ADD KEY `fk_daily_reviews_supervisor` (`supervisor_user_id`);
+
+--
 -- Index pour la table `http_sessions`
 --
 ALTER TABLE `http_sessions`
@@ -4706,6 +4879,7 @@ ALTER TABLE `locations`
   ADD PRIMARY KEY (`location_id`),
   ADD UNIQUE KEY `uq_locations_code` (`location_code`),
   ADD UNIQUE KEY `uq_locations_category` (`category_id`),
+  ADD UNIQUE KEY `uq_locations_owner_user` (`owner_user_id`),
   ADD KEY `fk_locations_parent` (`parent_location_id`);
 
 --
@@ -4727,7 +4901,10 @@ ALTER TABLE `maintenance_sessions`
   ADD KEY `fk_maint_asset` (`asset_id`),
   ADD KEY `fk_maint_service` (`service_id`),
   ADD KEY `fk_maint_reporter` (`reported_by`),
-  ADD KEY `fk_maint_technician` (`technician_id`);
+  ADD KEY `fk_maint_technician` (`technician_id`),
+  ADD KEY `ix_maintenance_reminder_queue` (`status`,`scheduled_at`,`reminder_email_sent_at`),
+  ADD KEY `ix_maintenance_executed_by` (`executed_by`),
+  ADD KEY `ix_maintenance_stock_source` (`stock_source_location_id`);
 
 --
 -- Index pour la table `materials`
@@ -4737,7 +4914,8 @@ ALTER TABLE `materials`
   ADD KEY `ix_materials_category` (`category_id`),
   ADD KEY `ix_materials_designation` (`designation`),
   ADD KEY `fk_materials_created_by` (`created_by`),
-  ADD KEY `ix_materials_code` (`material_code`);
+  ADD KEY `ix_materials_code` (`material_code`),
+  ADD KEY `ix_materials_merged_into` (`merged_into_material_id`);
 
 --
 -- Index pour la table `material_assets`
@@ -4933,10 +5111,16 @@ ALTER TABLE `allocation_lines`
   MODIFY `allocation_line_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT pour la table `app_notifications`
+--
+ALTER TABLE `app_notifications`
+  MODIFY `notification_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT pour la table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `audit_log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `audit_log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT pour la table `categories`
@@ -4945,10 +5129,16 @@ ALTER TABLE `categories`
   MODIFY `category_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT pour la table `employee_daily_reviews`
+--
+ALTER TABLE `employee_daily_reviews`
+  MODIFY `review_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT pour la table `locations`
 --
 ALTER TABLE `locations`
-  MODIFY `location_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `location_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT pour la table `maintenance_parts`
@@ -4960,13 +5150,13 @@ ALTER TABLE `maintenance_parts`
 -- AUTO_INCREMENT pour la table `maintenance_sessions`
 --
 ALTER TABLE `maintenance_sessions`
-  MODIFY `maintenance_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `maintenance_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `materials`
 --
 ALTER TABLE `materials`
-  MODIFY `material_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `material_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `material_assets`
@@ -4996,7 +5186,7 @@ ALTER TABLE `password_reset_tokens`
 -- AUTO_INCREMENT pour la table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `permission_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `permission_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT pour la table `purchase_orders`
@@ -5026,7 +5216,7 @@ ALTER TABLE `quote_request_lines`
 -- AUTO_INCREMENT pour la table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `role_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `role_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT pour la table `services`
@@ -5038,13 +5228,13 @@ ALTER TABLE `services`
 -- AUTO_INCREMENT pour la table `stock_movements`
 --
 ALTER TABLE `stock_movements`
-  MODIFY `stock_movement_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `stock_movement_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `stock_movement_lines`
 --
 ALTER TABLE `stock_movement_lines`
-  MODIFY `stock_movement_line_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `stock_movement_line_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `suppliers`
@@ -5090,6 +5280,12 @@ ALTER TABLE `allocation_lines`
   ADD CONSTRAINT `fk_al_movement_line` FOREIGN KEY (`stock_movement_line_id`) REFERENCES `stock_movement_lines` (`stock_movement_line_id`) ON UPDATE CASCADE;
 
 --
+-- Contraintes pour la table `app_notifications`
+--
+ALTER TABLE `app_notifications`
+  ADD CONSTRAINT `fk_app_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Contraintes pour la table `audit_logs`
 --
 ALTER TABLE `audit_logs`
@@ -5102,10 +5298,18 @@ ALTER TABLE `categories`
   ADD CONSTRAINT `fk_categories_parent` FOREIGN KEY (`parent_category_id`) REFERENCES `categories` (`category_id`) ON UPDATE CASCADE;
 
 --
+-- Contraintes pour la table `employee_daily_reviews`
+--
+ALTER TABLE `employee_daily_reviews`
+  ADD CONSTRAINT `fk_daily_reviews_employee` FOREIGN KEY (`employee_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_daily_reviews_supervisor` FOREIGN KEY (`supervisor_user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE;
+
+--
 -- Contraintes pour la table `locations`
 --
 ALTER TABLE `locations`
   ADD CONSTRAINT `fk_locations_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_locations_owner_user` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_locations_parent` FOREIGN KEY (`parent_location_id`) REFERENCES `locations` (`location_id`) ON UPDATE CASCADE;
 
 --
@@ -5123,14 +5327,17 @@ ALTER TABLE `maintenance_sessions`
   ADD CONSTRAINT `fk_maint_material` FOREIGN KEY (`material_id`) REFERENCES `materials` (`material_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_maint_reporter` FOREIGN KEY (`reported_by`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_maint_service` FOREIGN KEY (`service_id`) REFERENCES `services` (`service_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_maint_technician` FOREIGN KEY (`technician_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_maint_technician` FOREIGN KEY (`technician_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_maintenance_executed_by` FOREIGN KEY (`executed_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_maintenance_stock_source` FOREIGN KEY (`stock_source_location_id`) REFERENCES `locations` (`location_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `materials`
 --
 ALTER TABLE `materials`
   ADD CONSTRAINT `fk_materials_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_materials_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_materials_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_materials_merged_into` FOREIGN KEY (`merged_into_material_id`) REFERENCES `materials` (`material_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `material_assets`
