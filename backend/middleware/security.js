@@ -62,6 +62,12 @@ function requireRole(...roleCodes) {
   };
 }
 
+
+function auditMutations(req,res,next){
+  if(['HEAD','OPTIONS'].includes(req.method)||['/auth/csrf','/profile/history','/audit-logs','/notifications','/api/auth/csrf','/api/profile/history','/api/audit-logs','/api/notifications'].includes(req.path))return next();
+  res.on('finish',()=>{const userId=req.auth?.userId;if(!userId)return;const action=`HTTP_${req.method}`.slice(0,80);const details={method:req.method,path:req.path,status:res.statusCode,ip:req.ip};db.query(`INSERT INTO audit_logs(user_id,action_code,entity_name,entity_id,ip_address,details) VALUES(?,?,?,NULL,INET6_ATON(?),?)`,[userId,action,'api_request',req.ip,JSON.stringify(details)]).catch(error=>console.error('Échec de journalisation API',error.code||error.name))});next();
+}
+
 function requirePermission(permissionCode) {
   return async (req, res, next) => {
     try {
@@ -78,4 +84,4 @@ function requirePermission(permissionCode) {
   };
 }
 
-module.exports = { csrfToken, csrfProtection, requireAuth, requireRole, requirePermission };
+module.exports = { csrfToken, csrfProtection, requireAuth, requireRole, requirePermission, auditMutations };

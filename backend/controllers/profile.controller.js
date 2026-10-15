@@ -25,6 +25,8 @@ async function getProfile(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function history(req,res,next){try{const rows=await db.query(`SELECT audit_log_id,action_code,entity_name,entity_id,occurred_at,details FROM audit_logs WHERE user_id=? ORDER BY occurred_at DESC LIMIT 500`,[req.auth.userId]);const notifications=await db.query(`SELECT notification_id,notification_type,title,message,entity_name,entity_id,created_at,read_at FROM app_notifications WHERE user_id=? ORDER BY created_at DESC LIMIT 100`,[req.auth.userId]);res.set('Cache-Control','no-store');res.json({history:rows,notifications})}catch(error){next(error)}}
+
 function validEmail(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value) && value.length <= 254; }
 
 async function updateProfile(req, res, next) {

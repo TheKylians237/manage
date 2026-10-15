@@ -98,7 +98,7 @@ app.get('/enroll-mfa.html', requirePreAuth('mfa-setup'), sendPage('enroll-mfa.ht
 app.get('/profile.html', requireAuth, sendPage('profile.html'));
 
 const rolePages = {
-  ADMIN: 'dashboard-admin.html',
+  ADMIN: 'dashboard-admin.html', SUPERVISOR: 'dashboard-supervisor.html',
   STOREKEEPER: 'dashboard-storekeeper.html', MAINTAINER: 'dashboard-maintainer.html'
 };
 
@@ -114,11 +114,10 @@ const modulePages = {
   '/movements.html': ['ADMIN','STOREKEEPER','MAINTAINER'],
   '/allocations.html': ['ADMIN','STOREKEEPER'],
   '/maintenance.html': ['ADMIN','MAINTAINER'],
-  '/orders.html': ['ADMIN'],
-  '/quotes.html': ['ADMIN'],
-  '/suppliers.html': ['ADMIN'],
   '/users.html': ['ADMIN'],
-  '/reports.html': ['ADMIN']
+  '/reports.html': ['ADMIN'],
+  '/supervision.html': ['ADMIN','SUPERVISOR'],
+  '/audit-logs.html': ['ADMIN']
 };
 
 for (const [url, allowedRoles] of Object.entries(modulePages)) {
@@ -153,6 +152,17 @@ db.healthcheck().then(async () => {
     if (error.code === 'ER_BAD_FIELD_ERROR') {
       throw new Error('Schéma incomplet : exécutez backend/database/maintenance-reminders.sql avant de démarrer.');
     }
+    throw error;
+  }
+  try {
+    await db.query('SELECT diagnosis, comments, conclusion, executed_by, stock_source_location_id FROM maintenance_sessions LIMIT 0');
+    await db.query('SELECT department_name FROM users LIMIT 0');
+    await db.query('SELECT owner_user_id FROM locations LIMIT 0');
+    await db.query('SELECT notification_id FROM app_notifications LIMIT 0');
+    await db.query('SELECT review_id FROM employee_daily_reviews LIMIT 0');
+    await db.query("SELECT role_id FROM roles WHERE role_code='SUPERVISOR' LIMIT 0");
+  } catch (error) {
+    if (['ER_BAD_FIELD_ERROR','ER_NO_SUCH_TABLE'].includes(error.code)) throw new Error('Schéma incomplet : exécutez backend/database/maintenance-execution.sql et backend/database/supervision-stock.sql avant de démarrer.');
     throw error;
   }
   startMaintenanceReminderScheduler();

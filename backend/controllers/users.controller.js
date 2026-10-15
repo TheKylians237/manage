@@ -9,7 +9,7 @@ const PASSWORD_RULE=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,256}$
 async function list(req,res,next){
   try{
     const q=String(req.query.q||'').trim().slice(0,100),role=String(req.query.role||'').slice(0,40);
-    const rows=await db.query(`SELECT u.user_id,u.matricule,u.full_name,u.email,u.phone,u.avatar_url,u.is_active,u.mfa_enabled,u.created_at,r.role_code,r.role_name
+    const rows=await db.query(`SELECT u.user_id,u.matricule,u.full_name,u.email,u.phone,u.department_name,u.avatar_url,u.is_active,u.mfa_enabled,u.created_at,r.role_code,r.role_name
        FROM users u JOIN roles r ON r.role_id=u.role_id
        WHERE (?='' OR u.full_name LIKE ? OR u.matricule LIKE ? OR u.email LIKE ?) AND (?='' OR r.role_code=?)
        ORDER BY u.full_name LIMIT 300`,[q,`%${q}%`,`%${q}%`,`%${q}%`,role,role]);
@@ -19,12 +19,13 @@ async function list(req,res,next){
 
 async function create(req,res,next){
   try{
-    const d=req.body||{},badge=String(d.matricule||d.badge||'').trim(),name=String(d.fullName||'').trim(),email=String(d.email||'').trim().toLowerCase(),roleCode=String(d.roleCode||'');
+    const d=req.body||{},badge=String(d.matricule||d.badge||'').trim(),name=String(d.fullName||'').trim(),email=String(d.email||'').trim().toLowerCase(),roleCode=String(d.roleCode||''),department=String(d.departmentName||'').trim();
     if(!/^[\p{L}\p{N}._-]{2,40}$/u.test(badge)||name.length<2||name.length>150||!/^\S+@\S+\.\S+$/.test(email)||email.length>254||!PASSWORD_RULE.test(String(d.initialPassword||'')))return res.status(400).json({error:'Vérifiez le matricule, le nom, l’adresse et le mot de passe (12 caractères minimum, majuscule, minuscule, chiffre et symbole).'});
     const roles=await db.query('SELECT role_id FROM roles WHERE role_code=?',[roleCode]);
     if(!roles.length)return res.status(400).json({error:'Rôle inconnu.'});
     const hash=await argon2.hash(d.initialPassword,{type:argon2.argon2id,memoryCost:19456,timeCost:2,parallelism:1});
-    await db.query(`INSERT INTO users(matricule,full_name,email,password_hash,role_id,mfa_enabled,is_active) VALUES(?,?,?,?,?,FALSE,TRUE)`,[badge,name,email,hash,roles[0].role_id]);
+    if(department.length>120)return res.status(400).json({error:'Le département ne peut pas dépasser 120 caractères.'});
+    await db.query(`INSERT INTO users(matricule,full_name,email,password_hash,role_id,department_name,mfa_enabled,is_active) VALUES(?,?,?,?,?,?,FALSE,TRUE)`,[badge,name,email,hash,roles[0].role_id,department||null]);
     res.status(201).json({ok:true,message:'Compte créé. Au premier accès, l’utilisateur devra enregistrer un second facteur TOTP.'});
   }catch(error){if(error.code==='ER_DUP_ENTRY')return res.status(409).json({error:'Ce matricule ou cette adresse e-mail est déjà utilisé.'});next(error)}
 }
@@ -39,7 +40,8 @@ async function update(req,res,next){
     const role=roleCode?await db.query('SELECT role_id FROM roles WHERE role_code=?',[roleCode]):[];
     if(roleCode&&!role.length)return res.status(400).json({error:'Rôle inconnu.'});
     const updates=[],params=[];
-    if(role.length){updates.push('role_id=?');params.push(role[0].role_id)}
+    if(Object.hasOwn(d,'departmentName')){const department=String(d.departmentName||'').trim();if(department.length>120)return res.status(400).json({error:'Le département ne peut pas dépasser 120 caractères.'});updates.push('department_name=?');params.push(department||null)}
+    if(role.length){updates.push('role_id=?');params.push(role[0].role_id);updates.push('session_version=session_version+1')}
     if(typeof d.isActive==='boolean'){updates.push('is_active=?');params.push(d.isActive?1:0);if(!d.isActive)updates.push('session_version=session_version+1')}
     if(!updates.length)return res.status(400).json({error:'Aucune modification valide.'});
     params.push(id);

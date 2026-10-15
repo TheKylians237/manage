@@ -8,11 +8,11 @@ const dashboard = require('./controllers/dashboard.controller');
 const materials = require('./controllers/materials.controller');
 const inventory = require('./controllers/inventory.controller');
 const maintenance = require('./controllers/maintenance.controller');
-const procurement = require('./controllers/procurement.controller');
+const oversight = require('./controllers/oversight.controller');
 const users = require('./controllers/users.controller');
 const services = require('./controllers/services.controller');
 const settings = require('./controllers/settings.controller');
-const { csrfToken, requireAuth, requirePermission } = require('./middleware/security');
+const { csrfToken, requireAuth, requirePermission, auditMutations } = require('./middleware/security');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
@@ -30,9 +30,11 @@ router.post('/auth/mfa/verify', auth.verifySecondFactor);
 router.post('/auth/logout', auth.logout);
 
 router.use(requireAuth);
+router.use(auditMutations);
 router.get('/dashboard', requirePermission('REPORTS_READ'), dashboard.dashboard);
 
 router.get('/profile', profile.getProfile);
+router.get('/profile/history', profile.history);
 router.patch('/profile', profile.updateProfile);
 router.post('/profile/avatar', upload.single('avatar'), profile.uploadAvatar);
 router.post('/profile/password', profile.changePassword);
@@ -56,22 +58,17 @@ router.post('/allocations', requirePermission('ALLOCATIONS_MANAGE'), inventory.c
 
 router.get('/maintenance', requirePermission('MAINTENANCE_MANAGE'), maintenance.list);
 router.get('/maintenance/technicians', requirePermission('USERS_MANAGE'), maintenance.technicians);
+router.get('/maintenance/available-materials', requirePermission('MAINTENANCE_MANAGE'), maintenance.availableMaterials);
 router.get('/maintenance/upcoming-reminders', requirePermission('MAINTENANCE_MANAGE'), maintenance.upcomingReminders);
 router.post('/maintenance', requirePermission('MAINTENANCE_MANAGE'), maintenance.create);
 router.patch('/maintenance/:maintenanceId/status', requirePermission('MAINTENANCE_MANAGE'), maintenance.updateStatus);
 router.get('/maintenance/:maintenanceId/parts', requirePermission('MAINTENANCE_MANAGE'), maintenance.listParts);
 router.post('/maintenance/:maintenanceId/parts', requirePermission('MAINTENANCE_MANAGE'), maintenance.consumePart);
 
-router.get('/suppliers', requirePermission('SUPPLIERS_MANAGE'), procurement.suppliers);
-router.post('/suppliers', requirePermission('SUPPLIERS_MANAGE'), procurement.createSupplier);
-router.get('/orders', requirePermission('PURCHASING_MANAGE'), procurement.listOrders);
-router.post('/orders', requirePermission('PURCHASING_MANAGE'), procurement.createOrder);
-router.patch('/orders/:orderId/status', requirePermission('PURCHASING_MANAGE'), procurement.updateOrderStatus);
-router.get('/quote-requests', requirePermission('PURCHASING_MANAGE'), procurement.listQuoteRequests);
-router.post('/quote-requests', requirePermission('PURCHASING_MANAGE'), procurement.createQuoteRequest);
-router.get('/quote-requests/:quoteRequestId', requirePermission('PURCHASING_MANAGE'), procurement.getQuoteRequest);
-router.get('/quote-requests/:quoteRequestId/quotes', requirePermission('PURCHASING_MANAGE'), procurement.listSupplierQuotes);
-router.post('/quote-requests/:quoteRequestId/quotes', requirePermission('PURCHASING_MANAGE'), procurement.recordSupplierQuote);
+router.get('/supervision/overview', requirePermission('SUPERVISION_READ'), oversight.overview);
+router.get('/supervision/reviews', requirePermission('SUPERVISION_READ'), oversight.reviews);
+router.post('/supervision/reviews', requirePermission('SUPERVISION_REVIEW'), oversight.saveReview);
+router.get('/audit-logs', requirePermission('USERS_MANAGE'), oversight.logs);
 
 router.get('/users', requirePermission('USERS_MANAGE'), users.list);
 router.post('/users', requirePermission('USERS_MANAGE'), users.create);
@@ -80,6 +77,7 @@ router.post('/users/:userId/reset-mfa', requirePermission('USERS_MANAGE'), users
 router.get('/settings', requirePermission('USERS_MANAGE'), settings.get);
 router.patch('/settings', requirePermission('USERS_MANAGE'), settings.update);
 router.get('/notifications', settings.notifications);
+router.patch('/notifications/:notificationId/read', settings.markNotificationRead);
 
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {

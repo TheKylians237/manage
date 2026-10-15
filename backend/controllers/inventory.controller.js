@@ -31,6 +31,8 @@ async function listMovements(req, res, next) {
     const type = movementTypes.has(req.query.type) ? req.query.type : null;
     const q = String(req.query.q || '').trim().slice(0, 100);
     const params = [], conditions = [];
+    if(req.auth.roleCode==='STOREKEEPER'){conditions.push('(COALESCE(src.owner_user_id,0)=0 OR COALESCE(dst.owner_user_id,0)=0)')}
+    if(req.auth.roleCode==='MAINTAINER'){conditions.push('(src.owner_user_id=? OR dst.owner_user_id=?)');params.push(req.auth.userId,req.auth.userId)}
     if (from) { conditions.push('sm.movement_date >= ?'); params.push(`${from} 00:00:00`); }
     if (to) { conditions.push('sm.movement_date < DATE_ADD(?, INTERVAL 1 DAY)'); params.push(to); }
     if (type) { conditions.push('sm.movement_type = ?'); params.push(type); }
@@ -40,7 +42,7 @@ async function listMovements(req, res, next) {
       `SELECT sm.stock_movement_id, sm.movement_number, sm.movement_type, sm.movement_date,
               src.location_name AS source_location, dst.location_name AS destination_location,
               sm.recipient_name, sm.document_reference, u.full_name AS performed_by,
-              m.designation, m.material_code, ml.quantity, s.service_name
+              m.designation, m.material_code, ml.quantity, s.service_name,sm.notes
          FROM stock_movements sm
          JOIN stock_movement_lines ml ON ml.stock_movement_id = sm.stock_movement_id
          JOIN materials m ON m.material_id = ml.material_id
@@ -63,10 +65,11 @@ async function createMovement(req, res, next) {
     if (!movementTypes.has(type) || !Number.isSafeInteger(materialId) || !Number.isFinite(quantity) || quantity <= 0) return res.status(400).json({ error: 'Type, matériel ou quantité invalide.' });
     let effectiveSource = sourceId, effectiveDestination = destinationId;
     if ((type === 'IN' && !effectiveDestination) || (type === 'OUT' && !effectiveSource)) {
-      const locations = await db.query('SELECT location_id FROM locations WHERE is_active = TRUE ORDER BY location_id LIMIT 1');
+      const scope=req.auth.roleCode==='MAINTAINER'?'AND owner_user_id=?':req.auth.roleCode==='STOREKEEPER'?'AND owner_user_id IS NULL':'';const locations=await db.query(`SELECT location_id FROM locations WHERE is_active=TRUE ${scope} ORDER BY location_id LIMIT 1`,req.auth.roleCode==='MAINTAINER'?[req.auth.userId]:[]);
       if (locations.length) { if (type === 'IN') effectiveDestination = locations[0].location_id; else effectiveSource = locations[0].location_id; }
     }
     if ((type === 'IN' && (effectiveSource || !effectiveDestination)) || (type === 'OUT' && (!effectiveSource || effectiveDestination)) || (type === 'TRANSFER' && (!effectiveSource || !effectiveDestination || effectiveSource === effectiveDestination))) return res.status(400).json({ error: 'Sélectionnez des emplacements compatibles avec ce type de mouvement.' });
+    if(req.auth.roleCode!=='ADMIN'){const locationIds=[effectiveSource,effectiveDestination].filter(Boolean);const owned=await db.query(`SELECT location_id,owner_user_id FROM locations WHERE location_id IN (${locationIds.map(()=>'?').join(',')})`,locationIds);const allowed=loc=>req.auth.roleCode==='MAINTAINER'?Number(loc.owner_user_id)===Number(req.auth.userId):loc.owner_user_id==null;if(owned.some(loc=>!allowed(loc)))return res.status(403).json({error:'Ce mouvement dépasse le périmètre de stock de votre rôle.'})}
     const movementNumber = String(req.body?.movementNumber || `MVT-${Date.now()}`).slice(0, 50);
     const inserted = await db.transaction(async tx => {
       const result = await tx.query(
@@ -96,6 +99,7 @@ async function createAllocation(req, res, next) {
     const recipientIdNumber = String(req.body?.recipientIdNumber || '').trim();
     if (!Number.isSafeInteger(serviceId) || !Number.isSafeInteger(sourceLocationId) || !recipient || recipient.length > 150 || !['MATRICULE', 'CNI'].includes(recipientIdType) || !/^[A-Za-z0-9 ./-]{3,40}$/.test(recipientIdNumber) || !lines.length) return res.status(400).json({ error: 'Service, emplacement, bénéficiaire, matricule ou numéro de CNI et matériel requis.' });
     for (const line of lines) if (!Number.isSafeInteger(Number(line.materialId)) || !Number.isFinite(Number(line.quantity)) || Number(line.quantity) <= 0) return res.status(400).json({ error: 'Ligne de dotation invalide.' });
+    if(req.auth.roleCode==='STOREKEEPER'){const allowed=await db.query('SELECT location_id FROM locations WHERE location_id=? AND owner_user_id IS NULL AND is_active=TRUE',[sourceLocationId]);if(!allowed.length)return res.status(403).json({error:'Les dotations doivent être prélevées dans le stock magasinier.'})}
     const allocationNumber = `DOT-${Date.now()}`;
     const allocationId = await db.transaction(async tx => {
       const mv = await tx.query(

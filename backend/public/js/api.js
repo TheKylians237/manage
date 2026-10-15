@@ -1,6 +1,27 @@
 'use strict';
 window.MatApi = (() => {
   let csrf = null;
+  const defaultPreferences = { theme: 'system', density: 'comfortable', sounds: true, desktopNotifications: false, reduceMotion: false, dashboardPeriod: '30' };
+  let preferenceScope = sessionStorage.getItem('mat-manage-preference-scope') || 'guest';
+  function readPreferences(scope = preferenceScope) {
+    try { return { ...defaultPreferences, ...JSON.parse(localStorage.getItem(`mat-manage-preferences:${scope}`) || '{}') }; }
+    catch { return { ...defaultPreferences }; }
+  }
+  function applyPreferences(preferences = readPreferences()) {
+    const theme = preferences.theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : preferences.theme;
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.density = preferences.density;
+    document.documentElement.dataset.reduceMotion = preferences.reduceMotion ? 'true' : 'false';
+  }
+  function setPreferenceScope(userId) { preferenceScope = String(userId || 'guest'); sessionStorage.setItem('mat-manage-preference-scope', preferenceScope); applyPreferences(); }
+  function savePreferences(patch) {
+    const preferences = { ...readPreferences(), ...patch };
+    localStorage.setItem(`mat-manage-preferences:${preferenceScope}`, JSON.stringify(preferences));
+    applyPreferences(preferences);
+    return preferences;
+  }
+  applyPreferences(readPreferences());
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (readPreferences().theme === 'system') applyPreferences(); });
   async function getCsrf() {
     const response = await fetch('/api/auth/csrf', { credentials: 'same-origin', cache: 'no-store' });
     const data = await response.json(); csrf = data.csrfToken; return csrf;
@@ -28,5 +49,5 @@ window.MatApi = (() => {
     const node = document.createElement('div'); node.className = `toast${isError ? ' error' : ''}`; node.textContent = message;
     host.append(node); setTimeout(() => node.remove(), 3500);
   }
-  return { request, getCsrf, escape, toast };
+  return { request, getCsrf, escape, toast, readPreferences, savePreferences, setPreferenceScope };
 })();

@@ -42,6 +42,8 @@ async function findSimilarMaterial(query, designation) {
 async function listMaterials(req, res, next) {
   try {
     const filters = ['m.is_active = TRUE', 'm.merged_into_material_id IS NULL'], params = [];
+    if(req.auth.roleCode==='STOREKEEPER') filters.push('COALESCE(l.owner_user_id,0)=0');
+    if(req.auth.roleCode==='MAINTAINER'){filters.push('l.owner_user_id=?');params.push(req.auth.userId)}
     const q = String(req.query.q || '').trim().slice(0, 100);
     const categoryId = req.query.categoryId ? Number(req.query.categoryId) : null;
     const status = String(req.query.status || '');
@@ -76,6 +78,7 @@ async function stockOrganization(req, res, next) {
   try {
     const q = String(req.query.q || '').trim().slice(0, 100);
     const pattern = `%${q}%`;
+    const ownerFilter=req.auth.roleCode==='MAINTAINER'?'AND l.owner_user_id=?':req.auth.roleCode==='STOREKEEPER'?'AND COALESCE(l.owner_user_id,0)=0':'';
     const rows = await db.query(
       `SELECT m.material_id, m.material_code, m.designation,
               l.location_code, l.location_name, COALESCE(sb.quantity, 0) AS quantity
@@ -84,10 +87,10 @@ async function stockOrganization(req, res, next) {
          LEFT JOIN locations l ON l.location_id = sb.location_id
         WHERE m.is_active = TRUE AND m.merged_into_material_id IS NULL
           AND (? = '' OR m.material_code LIKE ? OR m.designation LIKE ?
-               OR COALESCE(l.location_code, '') LIKE ? OR COALESCE(l.location_name, '') LIKE ?)
+               OR COALESCE(l.location_code, '') LIKE ? OR COALESCE(l.location_name, '') LIKE ?) ${ownerFilter}
         ORDER BY m.material_code, l.location_code
         LIMIT 5000`,
-      [q, pattern, pattern, pattern, pattern]
+      req.auth.roleCode==='MAINTAINER'?[q,pattern,pattern,pattern,pattern,req.auth.userId]:[q,pattern,pattern,pattern,pattern]
     );
     res.json({ stockOrganization: rows });
   } catch (error) { next(error); }
@@ -142,9 +145,7 @@ async function categories(req, res, next) {
 }
 
 async function locations(req, res, next) {
-  try { res.json({ locations: await db.query(`SELECT l.location_id, l.location_code, l.location_name, l.category_id, c.category_name
-      FROM locations l LEFT JOIN categories c ON c.category_id = l.category_id
-      WHERE l.is_active = TRUE ORDER BY c.category_name IS NULL, c.category_name, l.location_name`) }); }
+  try { const scope=req.auth.roleCode==='MAINTAINER'?'AND l.owner_user_id=?':req.auth.roleCode==='STOREKEEPER'?'AND l.owner_user_id IS NULL':'';const params=req.auth.roleCode==='MAINTAINER'?[req.auth.userId]:[];res.json({locations:await db.query(`SELECT l.location_id,l.location_code,l.location_name,l.category_id,l.owner_user_id,c.category_name FROM locations l LEFT JOIN categories c ON c.category_id=l.category_id WHERE l.is_active=TRUE ${scope} ORDER BY c.category_name IS NULL,c.category_name,l.location_name`,params)}); }
   catch (error) { next(error); }
 }
 
@@ -155,7 +156,7 @@ async function createMaterial(req, res, next) {
     const item = (await db.query('SELECT material_code, designation, category_id FROM mercuriale_items WHERE mercuriale_item_id = ? LIMIT 1', [Number(mercurialeItemId)]))[0];
     if (!item) return res.status(400).json({ error: 'Sélectionnez un article de la mercuriale.' });
     const generated = await db.transaction(async tx => {
-      const locations = await tx.query('SELECT location_id FROM locations WHERE location_id = ? AND category_id = ? AND is_active = TRUE FOR UPDATE', [Number(locationId), item.category_id]);
+      const locations = await tx.query(`SELECT location_id FROM locations WHERE location_id=? AND category_id=? AND is_active=TRUE ${req.auth.roleCode==='STOREKEEPER'?'AND owner_user_id IS NULL':''} FOR UPDATE`,[Number(locationId),item.category_id]);
       if (!locations.length) { const error = new Error('Choisissez l’emplacement associé à la catégorie du matériel.'); error.status = 400; throw error; }
       const similar = await findSimilarMaterial(tx.query, item.designation);
       if (similar) {

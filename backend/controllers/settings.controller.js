@@ -18,18 +18,7 @@ async function update(req, res, next) {
   } catch (error) { next(error); }
 }
 
-async function notifications(req, res, next) {
-  try {
-    const rows = await db.query(
-      `SELECT COUNT(*) AS count FROM maintenance_sessions
-        WHERE status IN ('PLANNED', 'IN_PROGRESS')
-          AND (technician_id IS NULL OR technician_id = ?)
-          AND scheduled_at <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 DAY)`,
-      [req.auth.userId]
-    );
-    res.set('Cache-Control', 'no-store');
-    res.json({ count: Number(rows[0]?.count || 0) });
-  } catch (error) { next(error); }
-}
+async function notifications(req,res,next){try{const[rows,count]=await Promise.all([db.query(`SELECT notification_id,notification_type,title,message,entity_name,entity_id,created_at,read_at FROM app_notifications WHERE user_id=? ORDER BY created_at DESC LIMIT 30`,[req.auth.userId]),db.query('SELECT COUNT(*) count FROM app_notifications WHERE user_id=? AND read_at IS NULL',[req.auth.userId])]);res.set('Cache-Control','no-store');res.json({notifications:rows,count:Number(count[0]?.count||0)})}catch(error){next(error)}}
+async function markNotificationRead(req,res,next){try{const id=Number(req.params.notificationId);if(!Number.isSafeInteger(id))return res.status(400).json({error:'Notification invalide.'});await db.query('UPDATE app_notifications SET read_at=UTC_TIMESTAMP() WHERE notification_id=? AND user_id=?',[id,req.auth.userId]);res.json({ok:true})}catch(error){next(error)}}
 
-module.exports = { get, update, notifications };
+module.exports = { get, update, notifications, markNotificationRead };
