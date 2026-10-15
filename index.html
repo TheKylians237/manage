@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a25">
+  <title>Mat-Manage — Gestion de matériel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#dashboard" aria-label="Mat-Manage accueil"><span class="brand-mark">M<span>+</span></span><span class="brand-copy"><b>MAT-MANAGE</b><small>Gestion de parc</small></span></a>
+      <div class="workspace"><span class="workspace-dot"></span><div><small>ESPACE DE TRAVAIL</small><b>Service transmissions</b></div><span class="chevron">⌄</span></div>
+      <nav class="nav" aria-label="Navigation principale">
+        <p class="nav-label">VUE GÉNÉRALE</p>
+        <a class="nav-link active" href="#dashboard" data-page="dashboard"><span class="nav-icon">◫</span> Tableau de bord</a>
+        <p class="nav-label">GESTION DU PARC</p>
+        <a class="nav-link" href="#materiels" data-page="materiels"><span class="nav-icon">▦</span> Matériels <span class="nav-count" id="nav-materials">0</span></a>
+        <a class="nav-link" href="#mouvements" data-page="mouvements"><span class="nav-icon">⇄</span> Mouvements</a>
+        <a class="nav-link" href="#dotations" data-page="dotations"><span class="nav-icon">↗</span> Dotations</a>
+        <a class="nav-link" href="#maintenance" data-page="maintenance"><span class="nav-icon">⌁</span> Maintenance <span class="nav-alert" id="nav-maintenance">0</span></a>
+        <p class="nav-label">APPROVISIONNEMENT</p>
+        <a class="nav-link" href="#commandes" data-page="commandes"><span class="nav-icon">▤</span> Commandes</a>
+        <a class="nav-link" href="#fournisseurs" data-page="fournisseurs"><span class="nav-icon">♧</span> Fournisseurs</a>
+        <p class="nav-label">ADMINISTRATION</p>
+        <a class="nav-link" href="#rapports" data-page="rapports"><span class="nav-icon">▥</span> Rapports</a>
+        <a class="nav-link" href="#utilisateurs" data-page="utilisateurs"><span class="nav-icon">♙</span> Utilisateurs</a>
+      </nav>
+      <div class="sidebar-bottom"><div class="help-card"><span class="help-icon">?</span><b>Besoin d’aide ?</b><p>Consultez le guide pour découvrir les fonctionnalités.</p><button class="text-button" id="help-button">Ouvrir le guide <span>↗</span></button></div><div class="sidebar-foot"><span>MAT-MANAGE <span class="version">V1.0</span></span><span>© 2026</span></div></div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar"><button class="mobile-menu" id="mobile-menu" aria-label="Ouvrir le menu">☰</button><div class="breadcrumbs"><span>Service transmissions</span><span class="crumb-sep">/</span><b id="crumb-current">Tableau de bord</b></div><div class="top-actions"><div class="search-wrap"><span>⌕</span><input id="global-search" type="search" placeholder="Rechercher un matériel..." aria-label="Rechercher"><kbd>⌘ K</kbd></div><button class="icon-button notification-button" id="notifications" aria-label="Notifications">♧<i></i></button><span class="top-divider"></span><button class="profile-button" id="profile-button"><span class="avatar">JM</span><span class="profile-copy"><b>Jean M.</b><small>Administrateur</small></span><span class="chevron">⌄</span></button></div></header>
+      <div class="page-wrap"><div id="page-content"></div><footer class="page-footer"><span>Mat-Manage <b>V1.0</b></span><span>Outil de gestion du parc matériel</span><span id="footer-date"></span></footer></div>
+    </main>
+  </div>
+  <div id="modal-root"></div><div class="toast-region" id="toast-region" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "mat-manage-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API sécurisée Mat-Manage",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "create-admin": "node scripts/create-admin.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "argon2": "^0.41.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.19.0",
+    "helmet": "^8.0.0",
+    "multer": "^2.0.0",
+    "mysql2": "^3.14.0",
+    "nodemailer": "^10.0.16",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.35.5"
+  }
+}
