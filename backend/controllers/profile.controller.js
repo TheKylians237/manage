@@ -118,4 +118,4 @@ async function verifyTotpOnce(user, code) {
   return Boolean(result.affectedRows);
 }
 
-module.exports = { getProfile, updateProfile, uploadAvatar, changePassword, passwordPolicy };
+module.exports = { getProfile, history, updateProfile, uploadAvatar, changePassword, passwordPolicy };
